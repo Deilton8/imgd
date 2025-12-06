@@ -1,44 +1,121 @@
 <?php
+
 use App\Modules\Publication\Models\Publication;
 
-// Garante que a variável $recentPosts existe com tratamento de erro robusto
-if (!isset($recentPosts) || !is_array($recentPosts)) {
-    try {
+class RecentPostsLoader
+{
+    private const POSTS_LIMIT = 3;
+
+    private static array $socialLinks = [
+        'facebook' => 'https://web.facebook.com/www.imgdjeque.org.mz',
+        'youtube' => 'https://youtube.com/@imgdvideos',
+        'instagram' => 'https://www.instagram.com/apostolojeque'
+    ];
+
+    /**
+     * Carrega os posts recentes de forma segura
+     */
+    public static function loadRecentPosts(array &$recentPosts): void
+    {
+        if (self::isValidPostsArray($recentPosts)) {
+            return;
+        }
+
+        try {
+            $recentPosts = self::fetchRecentPosts();
+        } catch (Exception $e) {
+            self::logError($e);
+            $recentPosts = [];
+        }
+    }
+
+    /**
+     * Verifica se o array de posts é válido
+     */
+    private static function isValidPostsArray($posts): bool
+    {
+        return isset($posts) && is_array($posts) && !empty($posts);
+    }
+
+    /**
+     * Busca os posts recentes do banco de dados
+     */
+    private static function fetchRecentPosts(): array
+    {
         $publicationModel = new Publication();
-        $allPosts = $publicationModel->all();
+        $allPosts = $publicationModel->getAll();
 
-        // Pega os 3 últimos posts completos com mídias
+        return self::filterAndLimitPosts($allPosts, $publicationModel);
+    }
+
+    /**
+     * Filtra e limita os posts conforme regras de negócio
+     */
+    private static function filterAndLimitPosts(array $allPosts, Publication $model): array
+    {
         $recentPosts = [];
-        $postCount = 0;
 
-        foreach ($allPosts as $p) {
-            if ($postCount >= 3)
+        foreach ($allPosts as $post) {
+            if (count($recentPosts) >= self::POSTS_LIMIT) {
                 break;
+            }
 
-            if (isset($p['id'])) {
-                $postWithMedia = $publicationModel->findWithMedia($p['id']);
-                if ($postWithMedia && !empty($postWithMedia['titulo'])) {
-                    $recentPosts[] = $postWithMedia;
-                    $postCount++;
-                }
+            $postWithMedia = self::getPostWithMedia($post, $model);
+
+            if ($postWithMedia !== null) {
+                $recentPosts[] = $postWithMedia;
             }
         }
-    } catch (Exception $e) {
-        // Log do erro em ambiente de produção
-        error_log("Erro ao carregar posts recentes: " . $e->getMessage());
-        $recentPosts = [];
+
+        return $recentPosts;
+    }
+
+    /**
+     * Obtém um post com mídias se for válido
+     */
+    private static function getPostWithMedia(array $post, Publication $model): ?array
+    {
+        if (!isset($post['id'])) {
+            return null;
+        }
+
+        $postWithMedia = $model->findWithMedia($post['id']);
+
+        if (empty($postWithMedia['titulo'])) {
+            return null;
+        }
+
+        return $postWithMedia;
+    }
+
+    /**
+     * Registra erros de forma segura
+     */
+    private static function logError(Exception $e): void
+    {
+        error_log(sprintf(
+            "Erro ao carregar posts recentes: %s [Arquivo: %s, Linha: %s]",
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine()
+        ));
+    }
+
+    /**
+     * Retorna os links de redes sociais
+     */
+    public static function getSocialLinks(): array
+    {
+        return self::$socialLinks;
     }
 }
 
-// URLs das redes sociais (substitua pelas reais)
-$socialLinks = [
-    'facebook' => 'https://web.facebook.com/www.imgdjeque.org.mz',
-    'youtube' => 'https://youtube.com/@imgdvideos',
-    'instagram' => 'https://www.instagram.com/apostolojeque'
-];
+// Uso do código refatorado
+$recentPosts = $recentPosts ?? []; // Inicialização segura
+RecentPostsLoader::loadRecentPosts($recentPosts);
 
-// Caminho padrão para placeholder
-$placeholderImage = '/assets/img/placeholder-100x100.png';
+$socialLinks = RecentPostsLoader::getSocialLinks();
+
 ?>
 
 <!-- ================> Social section start here <================== -->

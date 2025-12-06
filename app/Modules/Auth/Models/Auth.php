@@ -9,383 +9,411 @@ use PDOException;
 
 class Auth extends Model
 {
-    protected $table = "usuarios";
-
-    // Configurações de segurança
-    private const MAX_TENTATIVAS = 5;
-    private const BLOQUEIO_MINUTOS = 15;
+    private const ATTEMPT_PREFIX_EMAIL = 'login_attempts_email_';
+    private const ATTEMPT_PREFIX_IP = 'login_attempts_ip_';
+    private const MAX_ATTEMPTS = 5;
+    private const LOCKOUT_MINUTES = 15;
     private const REMEMBER_DAYS = 30;
     private const RESET_EXPIRATION_HOURS = 2;
 
-    public function attempt(string $email, string $senha): array
+    protected string $table = "usuarios";
+
+    public function attempt(string $email, string $password): array
     {
         try {
-            // Verifica bloqueio por IP e email
-            if ($this->estaBloqueado($email)) {
-                $tempoRestante = $this->getTempoBloqueioRestante($email);
-                $this->registrarLog(null, $email, 'login_failed', 'Conta bloqueada temporariamente');
-                return [
-                    'success' => false,
-                    'error' => "Muitas tentativas falhas. Tente novamente em {$tempoRestante}."
-                ];
+            if ($this->isAccountLocked($email)) {
+                $remainingTime = $this->getRemainingLockoutTime($email);
+                $this->logAuthAction(null, $email, 'login_failed', 'Conta bloqueada temporariamente');
+                return $this->createFailureResponse("Muitas tentativas falhas. Tente novamente em {$remainingTime}.");
             }
 
-            $usuario = $this->buscarUsuarioPorEmail($email);
+            $user = $this->findUserByEmail($email);
 
-            if (!$usuario) {
-                $this->registrarTentativaFalha($email);
-                $this->registrarLog(null, $email, 'login_failed', 'Email não encontrado');
-                return [
-                    'success' => false,
-                    'error' => 'Credenciais inválidas.'
-                ];
+            if (!$user) {
+                $this->registerFailedAttempt($email);
+                $this->logAuthAction(null, $email, 'login_failed', 'Email não encontrado');
+                return $this->createFailureResponse('Credenciais inválidas.');
             }
 
-            // Verifica status da conta
-            if ($usuario['status'] !== 'ativo') {
-                $this->registrarLog($usuario['id'], $usuario['email'], 'login_failed', 'Conta inativa');
-                return [
-                    'success' => false,
-                    'error' => 'Conta inativa. Contate o administrador.'
-                ];
+            if (!$this->isUserActive($user)) {
+                $this->logAuthAction($user['id'], $user['email'], 'login_failed', 'Conta inativa');
+                return $this->createFailureResponse('Conta inativa. Contate o administrador.');
             }
 
-            // Verifica senha
-            if (!password_verify($senha, $usuario["senha"])) {
-                $this->registrarTentativaFalha($email);
-                $this->registrarLog($usuario['id'], $usuario['email'], 'login_failed', 'Senha incorreta');
-                return [
-                    'success' => false,
-                    'error' => 'Credenciais inválidas.'
-                ];
+            if (!$this->validatePassword($password, $user["senha"])) {
+                $this->registerFailedAttempt($email);
+                $this->logAuthAction($user['id'], $user['email'], 'login_failed', 'Senha incorreta');
+                return $this->createFailureResponse('Credenciais inválidas.');
             }
 
-            // Login bem-sucedido
-            $this->resetarTentativas($email);
-            $this->registrarLoginBemSucedido($usuario['id']);
-            $this->registrarLog($usuario['id'], $usuario['email'], 'login_success');
+            return $this->handleSuccessfulLogin($user);
 
-            return [
-                'success' => true,
-                'usuario' => $usuario
-            ];
-
-        } catch (PDOException $e) {
-            error_log("Erro no login: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => 'Erro interno do sistema. Tente novamente.'
-            ];
+        } catch (PDOException $exception) {
+            error_log("Erro no login: " . $exception->getMessage());
+            return $this->createFailureResponse('Erro interno do sistema. Tente novamente.');
         }
     }
 
-    private function buscarUsuarioPorEmail(string $email): ?array
+    private function findUserByEmail(string $email): ?array
     {
-        $stmt = $this->db->prepare("
+        $query = "
             SELECT id, nome, email, senha, papel, status, ultimo_login 
             FROM {$this->table} 
             WHERE email = ? 
             LIMIT 1
-        ");
-        $stmt->execute([$email]);
+        ";
 
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ?: null;
+        $statement = $this->database->prepare($query);
+        $statement->execute([$email]);
+
+        return $statement->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    private function registrarTentativaFalha(string $email): void
+    private function registerFailedAttempt(string $email): void
     {
-        $ip = $this->getClientIP();
-        $keyEmail = "login_attempts_email_" . md5($email);
-        $keyIP = "login_attempts_ip_" . md5($ip);
+        $ipAddress = $this->getClientIP();
+        $emailKey = self::ATTEMPT_PREFIX_EMAIL . md5($email);
+        $ipKey = self::ATTEMPT_PREFIX_IP . md5($ipAddress);
 
-        $this->incrementarTentativa($keyEmail);
-        $this->incrementarTentativa($keyIP);
+        $this->incrementAttemptCount($emailKey);
+        $this->incrementAttemptCount($ipKey);
     }
 
-    private function incrementarTentativa(string $key): void
+    private function incrementAttemptCount(string $key): void
     {
-        $tentativas = $_SESSION[$key]['count'] ?? 0;
+        $attempts = $_SESSION[$key]['count'] ?? 0;
         $_SESSION[$key] = [
-            'count' => $tentativas + 1,
+            'count' => $attempts + 1,
             'time' => time(),
             'ip' => $this->getClientIP()
         ];
     }
 
-    private function resetarTentativas(string $email): void
+    private function resetAttempts(string $email): void
     {
-        $ip = $this->getClientIP();
-        $keyEmail = "login_attempts_email_" . md5($email);
-        $keyIP = "login_attempts_ip_" . md5($ip);
+        $ipAddress = $this->getClientIP();
+        $emailKey = self::ATTEMPT_PREFIX_EMAIL . md5($email);
+        $ipKey = self::ATTEMPT_PREFIX_IP . md5($ipAddress);
 
-        unset($_SESSION[$keyEmail], $_SESSION[$keyIP]);
+        unset($_SESSION[$emailKey], $_SESSION[$ipKey]);
     }
 
-    private function estaBloqueado(string $email): bool
+    private function isAccountLocked(string $email): bool
     {
-        $ip = $this->getClientIP();
-        $keyEmail = "login_attempts_email_" . md5($email);
-        $keyIP = "login_attempts_ip_" . md5($ip);
+        $ipAddress = $this->getClientIP();
+        $emailKey = self::ATTEMPT_PREFIX_EMAIL . md5($email);
+        $ipKey = self::ATTEMPT_PREFIX_IP . md5($ipAddress);
 
-        return $this->verificarBloqueio($keyEmail) || $this->verificarBloqueio($keyIP);
+        return $this->checkLockoutStatus($emailKey) || $this->checkLockoutStatus($ipKey);
     }
 
-    private function verificarBloqueio(string $key): bool
+    private function checkLockoutStatus(string $key): bool
     {
         if (!isset($_SESSION[$key])) {
             return false;
         }
 
-        $tentativas = $_SESSION[$key]['count'];
-        $tempo = $_SESSION[$key]['time'];
-        $tempoExpiracao = self::BLOQUEIO_MINUTOS * 60;
+        $attemptCount = $_SESSION[$key]['count'];
+        $attemptTime = $_SESSION[$key]['time'];
+        $lockoutDuration = self::LOCKOUT_MINUTES * 60;
 
-        if ($tentativas >= self::MAX_TENTATIVAS && (time() - $tempo) < $tempoExpiracao) {
+        if ($attemptCount >= self::MAX_ATTEMPTS && (time() - $attemptTime) < $lockoutDuration) {
             return true;
         }
 
-        // Limpa tentativas expiradas
-        if ((time() - $tempo) >= $tempoExpiracao) {
+        if ((time() - $attemptTime) >= $lockoutDuration) {
             unset($_SESSION[$key]);
         }
 
         return false;
     }
 
-    private function getTempoBloqueioRestante(string $email): string
+    private function getRemainingLockoutTime(string $email): string
     {
-        $ip = $this->getClientIP();
-        $keyEmail = "login_attempts_email_" . md5($email);
-        $keyIP = "login_attempts_ip_" . md5($ip);
+        $ipAddress = $this->getClientIP();
+        $emailKey = self::ATTEMPT_PREFIX_EMAIL . md5($email);
+        $ipKey = self::ATTEMPT_PREFIX_IP . md5($ipAddress);
 
-        $tempoRestante = 0;
+        $remainingSeconds = 0;
 
-        foreach ([$keyEmail, $keyIP] as $key) {
+        foreach ([$emailKey, $ipKey] as $key) {
             if (isset($_SESSION[$key])) {
-                $tempoDecorrido = time() - $_SESSION[$key]['time'];
-                $tempoRestante = max($tempoRestante, (self::BLOQUEIO_MINUTOS * 60) - $tempoDecorrido);
+                $elapsedTime = time() - $_SESSION[$key]['time'];
+                $remainingSeconds = max($remainingSeconds, (self::LOCKOUT_MINUTES * 60) - $elapsedTime);
             }
         }
 
-        $minutos = ceil($tempoRestante / 60);
-        return "{$minutos} " . ($minutos == 1 ? 'minuto' : 'minutos');
+        $minutes = ceil($remainingSeconds / 60);
+        return "{$minutes} " . ($minutes == 1 ? 'minuto' : 'minutos');
     }
 
-    private function registrarLoginBemSucedido(int $usuarioId): void
+    private function handleSuccessfulLogin(array $user): array
     {
-        $stmt = $this->db->prepare("
+        $this->resetAttempts($user['email']);
+        $this->registerSuccessfulLogin($user['id']);
+        $this->logAuthAction($user['id'], $user['email'], 'login_success');
+
+        return [
+            'success' => true,
+            'usuario' => $user
+        ];
+    }
+
+    private function registerSuccessfulLogin(int $userId): void
+    {
+        $query = "
             UPDATE {$this->table} 
             SET ultimo_login = NOW(), 
                 tentativas_login = 0 
             WHERE id = ?
-        ");
-        $stmt->execute([$usuarioId]);
+        ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$userId]);
     }
 
-    public function gerarTokenLogin(int $usuarioId): bool
+    public function generateLoginToken(int $userId): bool
     {
         try {
             $token = bin2hex(random_bytes(32));
-            $expira = (new DateTime('+' . self::REMEMBER_DAYS . ' days'))->format('Y-m-d H:i:s');
+            $expiration = (new DateTime('+' . self::REMEMBER_DAYS . ' days'))->format('Y-m-d H:i:s');
 
-            $stmt = $this->db->prepare("
+            $query = "
                 UPDATE {$this->table} 
                 SET remember_token = ?, remember_expires = ? 
                 WHERE id = ?
-            ");
+            ";
 
-            $result = $stmt->execute([$token, $expira, $usuarioId]);
+            $statement = $this->database->prepare($query);
+            $result = $statement->execute([$token, $expiration, $userId]);
 
             if ($result) {
-                setcookie(
-                    'remember_token',
-                    $token,
-                    [
-                        'expires' => time() + (self::REMEMBER_DAYS * 86400),
-                        'path' => '/',
-                        'domain' => '',
-                        'secure' => isset($_SERVER['HTTPS']),
-                        'httponly' => true,
-                        'samesite' => 'Strict'
-                    ]
-                );
+                $this->setRememberCookie($token);
                 return true;
             }
 
             return false;
-        } catch (Exception $e) {
-            error_log("Erro ao gerar token: " . $e->getMessage());
+        } catch (Exception $exception) {
+            error_log("Erro ao gerar token: " . $exception->getMessage());
             return false;
         }
     }
 
-    public function autenticarPorToken(string $token): ?array
+    private function setRememberCookie(string $token): void
+    {
+        setcookie(
+            'remember_token',
+            $token,
+            [
+                'expires' => time() + (self::REMEMBER_DAYS * 86400),
+                'path' => '/',
+                'domain' => '',
+                'secure' => isset($_SERVER['HTTPS']),
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]
+        );
+    }
+
+    public function authenticateByToken(string $token): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT id, nome, email, papel, status, remember_expires 
                 FROM {$this->table} 
                 WHERE remember_token = ? 
                 AND status = 'ativo' 
                 AND remember_expires > NOW() 
                 LIMIT 1
-            ");
-            $stmt->execute([$token]);
+            ";
 
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+            $statement = $this->database->prepare($query);
+            $statement->execute([$token]);
 
-            if ($usuario) {
-                $this->registrarLog($usuario['id'], $usuario['email'], 'token_used');
+            $user = $statement->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                $this->logAuthAction($user['id'], $user['email'], 'token_used');
             }
 
-            return $usuario ?: null;
-        } catch (PDOException $e) {
-            error_log("Erro na autenticação por token: " . $e->getMessage());
+            return $user ?: null;
+        } catch (PDOException $exception) {
+            error_log("Erro na autenticação por token: " . $exception->getMessage());
             return null;
         }
     }
 
-    public function gerarTokenRecuperacao(string $email): ?string
+    public function generateRecoveryToken(string $email): ?string
     {
         try {
-            $usuario = $this->buscarUsuarioPorEmail($email);
+            $user = $this->findUserByEmail($email);
 
-            if (!$usuario) {
+            if (!$user) {
                 return null;
             }
 
-            // Previne spam - verifica se já existe token recente
-            $stmt = $this->db->prepare("
-                SELECT reset_token, reset_expires 
-                FROM {$this->table} 
-                WHERE id = ? AND reset_expires > NOW()
-            ");
-            $stmt->execute([$usuario['id']]);
-
-            if ($stmt->fetch()) {
-                return null; // Já existe token válido
+            if ($this->hasValidRecoveryToken($user['id'])) {
+                return null;
             }
 
             $token = bin2hex(random_bytes(32));
-            $expira = (new DateTime('+' . self::RESET_EXPIRATION_HOURS . ' hours'))->format('Y-m-d H:i:s');
+            $expiration = (new DateTime('+' . self::RESET_EXPIRATION_HOURS . ' hours'))->format('Y-m-d H:i:s');
 
-            $stmt = $this->db->prepare("
+            $query = "
                 UPDATE {$this->table} 
                 SET reset_token = ?, reset_expires = ? 
                 WHERE id = ?
-            ");
+            ";
 
-            $result = $stmt->execute([$token, $expira, $usuario['id']]);
+            $statement = $this->database->prepare($query);
+            $result = $statement->execute([$token, $expiration, $user['id']]);
 
             if ($result) {
-                $this->registrarLog($usuario['id'], $email, 'password_reset', 'Token gerado');
+                $this->logAuthAction($user['id'], $email, 'password_reset', 'Token gerado');
             }
 
             return $result ? $token : null;
 
-        } catch (PDOException $e) {
-            error_log("Erro ao gerar token de recuperação: " . $e->getMessage());
+        } catch (PDOException $exception) {
+            error_log("Erro ao gerar token de recuperação: " . $exception->getMessage());
             return null;
         }
     }
 
-    public function validarTokenRecuperacao(string $token): ?array
+    private function hasValidRecoveryToken(int $userId): bool
+    {
+        $query = "
+            SELECT reset_token, reset_expires 
+            FROM {$this->table} 
+            WHERE id = ? AND reset_expires > NOW()
+        ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$userId]);
+
+        return (bool) $statement->fetch();
+    }
+
+    public function validateRecoveryToken(string $token): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT id, email, reset_expires 
                 FROM {$this->table} 
                 WHERE reset_token = ? 
                 AND reset_expires > NOW() 
                 LIMIT 1
-            ");
-            $stmt->execute([$token]);
+            ";
 
-            $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $usuario ?: null;
-        } catch (PDOException $e) {
-            error_log("Erro ao validar token: " . $e->getMessage());
+            $statement = $this->database->prepare($query);
+            $statement->execute([$token]);
+
+            return $statement->fetch(PDO::FETCH_ASSOC) ?: null;
+        } catch (PDOException $exception) {
+            error_log("Erro ao validar token: " . $exception->getMessage());
             return null;
         }
     }
 
-    public function atualizarSenha(int $usuarioId, string $novaSenha): bool
+    public function updatePassword(int $userId, string $newPassword): bool
     {
         try {
-            $hash = password_hash($novaSenha, PASSWORD_DEFAULT);
+            $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
 
-            $stmt = $this->db->prepare("
+            $query = "
                 UPDATE {$this->table} 
                 SET senha = ?, 
                     reset_token = NULL, 
                     reset_expires = NULL,
                     atualizado_em = NOW()
                 WHERE id = ?
-            ");
+            ";
 
-            $result = $stmt->execute([$hash, $usuarioId]);
+            $statement = $this->database->prepare($query);
+            $result = $statement->execute([$passwordHash, $userId]);
 
             if ($result) {
-                $this->registrarLog($usuarioId, '', 'password_reset', 'Senha alterada');
+                $this->logAuthAction($userId, '', 'password_reset', 'Senha alterada');
             }
 
             return $result;
-        } catch (PDOException $e) {
-            error_log("Erro ao atualizar senha: " . $e->getMessage());
+        } catch (PDOException $exception) {
+            error_log("Erro ao atualizar senha: " . $exception->getMessage());
             return false;
         }
     }
 
-    public function limparTokenLogin(int $usuarioId): bool
+    public function clearLoginToken(int $userId): bool
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 UPDATE {$this->table} 
                 SET remember_token = NULL, 
                     remember_expires = NULL 
                 WHERE id = ?
-            ");
-            return $stmt->execute([$usuarioId]);
-        } catch (PDOException $e) {
-            error_log("Erro ao limpar token: " . $e->getMessage());
+            ";
+
+            $statement = $this->database->prepare($query);
+            return $statement->execute([$userId]);
+        } catch (PDOException $exception) {
+            error_log("Erro ao limpar token: " . $exception->getMessage());
             return false;
         }
     }
 
-    public function getTentativasRestantes(string $email): int
+    public function getRemainingAttempts(string $email): int
     {
-        $key = "login_attempts_email_" . md5($email);
+        $key = self::ATTEMPT_PREFIX_EMAIL . md5($email);
 
         if (!isset($_SESSION[$key])) {
-            return self::MAX_TENTATIVAS;
+            return self::MAX_ATTEMPTS;
         }
 
-        $tentativas = $_SESSION[$key]['count'];
-        return max(0, self::MAX_TENTATIVAS - $tentativas);
+        $attemptCount = $_SESSION[$key]['count'];
+        return max(0, self::MAX_ATTEMPTS - $attemptCount);
     }
 
-
-    // MÉTODO CORRIGIDO - AGORA É PÚBLICO
-    public function registrarLog($usuarioId, string $email, string $tipo, string $descricao = ''): void
+    public function logAuthAction($userId, string $email, string $type, string $description = ''): void
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 INSERT INTO auth_logs 
                 (usuario_id, email, ip_address, user_agent, tipo, descricao) 
                 VALUES (?, ?, ?, ?, ?, ?)
-            ");
+            ";
 
-            $stmt->execute([
-                $usuarioId,
+            $statement = $this->database->prepare($query);
+            $statement->execute([
+                $userId,
                 $email,
                 $this->getClientIP(),
                 $_SERVER['HTTP_USER_AGENT'] ?? '',
-                $tipo,
-                $descricao
+                $type,
+                $description
             ]);
-        } catch (PDOException $e) {
-            error_log("Erro ao registrar log: " . $e->getMessage());
+        } catch (PDOException $exception) {
+            error_log("Erro ao registrar log: " . $exception->getMessage());
+        }
+    }
+
+    public function getAuthLogs(int $limit = 100): array
+    {
+        try {
+            $query = "
+                SELECT al.*, u.nome as usuario_nome 
+                FROM auth_logs al 
+                LEFT JOIN usuarios u ON al.usuario_id = u.id 
+                ORDER BY al.created_at DESC 
+                LIMIT ?
+            ";
+
+            $statement = $this->database->prepare($query);
+            $statement->execute([$limit]);
+
+            return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar logs: " . $exception->getMessage());
+            return [];
         }
     }
 
@@ -400,22 +428,21 @@ class Auth extends Model
         }
     }
 
-    public function getLogs(int $limite = 100): array
+    private function createFailureResponse(string $errorMessage): array
     {
-        try {
-            $stmt = $this->db->prepare("
-                SELECT al.*, u.nome as usuario_nome 
-                FROM auth_logs al 
-                LEFT JOIN usuarios u ON al.usuario_id = u.id 
-                ORDER BY al.created_at DESC 
-                LIMIT ?
-            ");
-            $stmt->execute([$limite]);
+        return [
+            'success' => false,
+            'error' => $errorMessage
+        ];
+    }
 
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar logs: " . $e->getMessage());
-            return [];
-        }
+    private function isUserActive(array $user): bool
+    {
+        return $user['status'] === 'ativo';
+    }
+
+    private function validatePassword(string $password, string $passwordHash): bool
+    {
+        return password_verify($password, $passwordHash);
     }
 }

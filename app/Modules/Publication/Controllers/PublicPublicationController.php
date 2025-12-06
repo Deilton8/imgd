@@ -7,45 +7,51 @@ use App\Modules\Publication\Models\Publication;
 
 class PublicPublicationController extends Controller
 {
-    private $publicacaoModel;
+    private Publication $publicationModel;
 
     public function __construct()
     {
-        $this->publicacaoModel = new Publication();
+        $this->publicationModel = new Publication();
     }
 
-    // Lista de publicações
-    public function index()
+    public function index(): void
     {
-        $publicacoesRaw = $this->publicacaoModel->all();
-        $publicacoes = [];
-
-        foreach ($publicacoesRaw as $publicacao) {
-            $publicacoes[] = $this->publicacaoModel->findWithMedia($publicacao['id']);
-        }
+        $rawPublications = $this->publicationModel->getAll();
+        $publications = $this->enrichPublicationsWithMedia($rawPublications);
 
         $title = "Publicações - IMGD";
+
         View::render("Publication/Views/public/index", [
-            "publicacoes" => $publicacoes,
+            "publicacoes" => $publications,
             "title" => $title
         ]);
     }
 
-    // Página de detalhe da publicação
-    public function show($id)
+    private function enrichPublicationsWithMedia(array $rawPublications): array
     {
-        $publicacao = $this->publicacaoModel->findWithMedia($id);
+        $enrichedPublications = [];
 
-        if (!$publicacao) {
+        foreach ($rawPublications as $publication) {
+            $enrichedPublications[] = $this->publicationModel->findWithMedia($publication['id']);
+        }
+
+        return $enrichedPublications;
+    }
+
+    public function show(int $id): void
+    {
+        $publication = $this->publicationModel->findWithMedia($id);
+
+        if (!$publication) {
             http_response_code(404);
             echo "Publicação não encontrada.";
             return;
         }
 
-        $title = $publicacao["titulo"];
+        $title = $publication["titulo"];
 
         View::render("Publication/Views/public/show", [
-            "publicacao" => $publicacao,
+            "publicacao" => $publication,
             "title" => $title
         ]);
     }

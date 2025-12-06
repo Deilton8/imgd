@@ -6,20 +6,46 @@ use App\Core\Config;
 
 class Model
 {
-    protected $db;
+    protected $database;
 
     public function __construct()
     {
-        $dsn = "mysql:host=" . Config::get("db_host") .
-            ";port=" . Config::get("db_port") .
-            ";dbname=" . Config::get("db_name");
+        $this->database = $this->createDatabaseConnection();
+        $this->configureDatabaseConnection();
+    }
 
-        $this->db = new PDO(
+    /**
+     * Cria a conexão com o banco de dados
+     */
+    private function createDatabaseConnection()
+    {
+        $dsn = $this->buildDsn();
+
+        return new PDO(
             $dsn,
             Config::get("db_user"),
             Config::get("db_pass")
         );
+    }
 
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    /**
+     * Constrói a string DSN para conexão
+     */
+    private function buildDsn()
+    {
+        return sprintf(
+            "mysql:host=%s;port=%s;dbname=%s",
+            Config::get("db_host"),
+            Config::get("db_port"),
+            Config::get("db_name")
+        );
+    }
+
+    /**
+     * Configura atributos da conexão PDO
+     */
+    private function configureDatabaseConnection()
+    {
+        $this->database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 }

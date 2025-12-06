@@ -3,30 +3,32 @@ namespace App\Core\Services;
 
 class EmailService
 {
+    private const EMAIL_PREFIX = 'recovery_';
+    private const EMAIL_LOGFILE = 'emails.log';
+    private const LOG_DIRECTORY = '/../../../storage/logs/emails/';
+
     private array $config;
 
     public function __construct()
     {
-        $this->config = $this->loadConfig();
+        $this->config = $this->loadConfiguration();
     }
 
-    private function loadConfig(): array
+    private function loadConfiguration(): array
     {
         return [
             'from_email' => $_ENV['FROM_EMAIL'] ?? 'noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost'),
             'from_name' => $_ENV['FROM_NAME'] ?? 'Painel Administrativo',
-            'use_file_log' => $_ENV['USE_FILE_LOG'] ?? true, // Para desenvolvimento
+            'use_file_log' => $_ENV['USE_FILE_LOG'] ?? true,
         ];
     }
 
     public function sendRecoveryEmail(string $to, string $link): bool
     {
-        // Para desenvolvimento, usar file log é mais seguro
         if ($this->config['use_file_log']) {
             return $this->saveEmailToFile($to, $link);
         }
 
-        // Tentar enviar email real
         return $this->sendRealEmail($to, $link);
     }
 
@@ -38,16 +40,16 @@ class EmailService
 
         try {
             return mail($to, $subject, $message, $headers);
-        } catch (\Exception $e) {
-            error_log("Erro ao enviar email: " . $e->getMessage());
-            // Fallback para file log
+        } catch (\Exception $exception) {
+            error_log("Erro ao enviar email: " . $exception->getMessage());
             return $this->saveEmailToFile($to, $link);
         }
     }
 
     private function createEmailTemplate(string $link): string
     {
-        return "
+        $currentYear = date('Y');
+        return <<<HTML
         <!DOCTYPE html>
         <html lang='pt-BR'>
         <head>
@@ -144,12 +146,12 @@ class EmailService
                 
                 <div class='footer'>
                     <p>Este é um e-mail automático, por favor não responda.</p>
-                    <p>© " . date('Y') . " Painel Administrativo. Todos os direitos reservados.</p>
+                    <p>© {$currentYear} Painel Administrativo. Todos os direitos reservados.</p>
                 </div>
             </div>
         </body>
         </html>
-        ";
+        HTML;
     }
 
     private function createEmailHeaders(): string
@@ -168,57 +170,70 @@ class EmailService
     private function saveEmailToFile(string $to, string $link): bool
     {
         try {
-            $logDir = __DIR__ . '/../../../storage/logs/emails/';
-            if (!is_dir($logDir)) {
-                mkdir($logDir, 0755, true);
-            }
+            $logDirectory = __DIR__ . self::LOG_DIRECTORY;
+            $this->ensureLogDirectoryExists($logDirectory);
 
             $timestamp = date('Y-m-d_H-i-s');
-            $filename = $logDir . "recovery_{$timestamp}.html";
+            $filename = $logDirectory . self::EMAIL_PREFIX . "{$timestamp}.html";
 
             $content = $this->createEmailTemplate($link);
-            $logInfo = "<!--\n";
-            $logInfo .= "Email para: {$to}\n";
-            $logInfo .= "Data: " . date('d/m/Y H:i:s') . "\n";
-            $logInfo .= "Link: {$link}\n";
-            $logInfo .= "-->\n\n";
+            $logInfo = $this->createLogInfo($to, $link, $timestamp);
 
             file_put_contents($filename, $logInfo . $content);
-
-            // Também log em texto simples
-            $textLog = "[" . date('Y-m-d H:i:s') . "] Email de recuperação para: {$to}\n";
-            $textLog .= "Link: {$link}\n";
-            $textLog .= "Arquivo: recovery_{$timestamp}.html\n";
-            $textLog .= "----------------------------------------\n";
-
-            file_put_contents($logDir . 'emails.log', $textLog, FILE_APPEND);
+            $this->appendToTextLog($logDirectory, $to, $link, $timestamp);
 
             return true;
-        } catch (\Exception $e) {
-            error_log("Erro ao salvar email em arquivo: " . $e->getMessage());
+        } catch (\Exception $exception) {
+            error_log("Erro ao salvar email em arquivo: " . $exception->getMessage());
             return false;
         }
     }
 
-    public function getLatestRecoveryLinks(): array
+    private function ensureLogDirectoryExists(string $directory): void
     {
-        $logDir = __DIR__ . '/../../../storage/logs/emails/';
-        $links = [];
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+    }
 
-        if (!is_dir($logDir)) {
-            return $links;
+    private function createLogInfo(string $to, string $link, string $timestamp): string
+    {
+        return "<!--\n" .
+            "Email para: {$to}\n" .
+            "Data: " . date('d/m/Y H:i:s') . "\n" .
+            "Link: {$link}\n" .
+            "-->\n\n";
+    }
+
+    private function appendToTextLog(string $directory, string $to, string $link, string $timestamp): void
+    {
+        $logEntry = "[" . date('Y-m-d H:i:s') . "] Email de recuperação para: {$to}\n" .
+            "Link: {$link}\n" .
+            "Arquivo: " . self::EMAIL_PREFIX . "{$timestamp}.html\n" .
+            "----------------------------------------\n";
+
+        file_put_contents($directory . self::EMAIL_LOGFILE, $logEntry, FILE_APPEND);
+    }
+
+    public function getLatestRecoveryLinks(int $limit = 10): array
+    {
+        $logDirectory = __DIR__ . self::LOG_DIRECTORY;
+        $recoveryLinks = [];
+
+        if (!is_dir($logDirectory)) {
+            return $recoveryLinks;
         }
 
-        $files = glob($logDir . 'recovery_*.html');
-        rsort($files); // Ordena do mais recente para o mais antigo
+        $files = glob($logDirectory . self::EMAIL_PREFIX . '*.html');
+        rsort($files);
 
-        foreach (array_slice($files, 0, 10) as $file) { // Últimos 10 emails
+        foreach (array_slice($files, 0, $limit) as $file) {
             $content = file_get_contents($file);
             if (preg_match('/Link: (.*?)\n/', $content, $matches)) {
-                $links[basename($file)] = $matches[1];
+                $recoveryLinks[basename($file)] = $matches[1];
             }
         }
 
-        return $links;
+        return $recoveryLinks;
     }
 }

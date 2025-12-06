@@ -6,15 +6,21 @@ class Router
     private $routes = [];
 
     /**
-     * Adiciona uma rota
+     * Adiciona uma rota ao sistema
      */
     private function addRoute($method, $uri, $action)
     {
-        $uri = rtrim($uri, "/");
-        if ($uri === '') {
-            $uri = '/';
-        }
+        $uri = $this->normalizeUri($uri);
         $this->routes[$method][$uri] = $action;
+    }
+
+    /**
+     * Normaliza a URI removendo barras extras
+     */
+    private function normalizeUri($uri)
+    {
+        $uri = rtrim($uri, "/");
+        return $uri === '' ? '/' : $uri;
     }
 
     /**
@@ -25,11 +31,26 @@ class Router
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $scriptName = dirname($_SERVER['SCRIPT_NAME']);
 
-        // Remove o prefixo do script (caso esteja em subdiretório)
-        if ($scriptName !== '/' && strpos($uri, $scriptName) === 0) {
+        if ($this->shouldRemoveScriptPrefix($scriptName, $uri)) {
             $uri = substr($uri, strlen($scriptName));
         }
 
+        return $this->cleanUri($uri);
+    }
+
+    /**
+     * Verifica se deve remover o prefixo do script
+     */
+    private function shouldRemoveScriptPrefix($scriptName, $uri)
+    {
+        return $scriptName !== '/' && strpos($uri, $scriptName) === 0;
+    }
+
+    /**
+     * Limpa a URI final
+     */
+    private function cleanUri($uri)
+    {
         $uri = '/' . trim($uri, '/');
         return $uri === '//' ? '/' : $uri;
     }
@@ -47,11 +68,19 @@ class Router
             extract($data);
             include $errorView;
         } else {
-            // Fallback básico
-            echo "<h1>Erro {$code}</h1>";
-            echo "<p>{$message}</p>";
+            $this->showBasicError($code, $message);
         }
+
         exit;
+    }
+
+    /**
+     * Exibe erro básico como fallback
+     */
+    private function showBasicError($code, $message)
+    {
+        echo "<h1>Erro {$code}</h1>";
+        echo "<p>{$message}</p>";
     }
 
     /**
@@ -71,7 +100,7 @@ class Router
     }
 
     /**
-     * Dispara a rota correta
+     * Processa a rota correspondente
      */
     public function dispatch()
     {
@@ -83,37 +112,75 @@ class Router
         }
 
         foreach ($this->routes[$method] as $route => $action) {
-            // Converte {param} em regex
-            $pattern = preg_replace("/\{[a-zA-Z_]+\}/", "([0-9a-zA-Z_-]+)", $route);
-            $pattern = "#^" . $pattern . "$#";
-
-            if (preg_match($pattern, $uri, $matches)) {
-                array_shift($matches); // remove a string completa da URI
-
-                [$controller, $methodAction] = explode('@', $action);
-                $controller = "App\\Modules\\" . $controller;
-
-                if (!class_exists($controller)) {
-                    $this->showError(500, "Controlador não encontrado: {$controller}");
-                }
-
-                $instance = new $controller();
-
-                if (!method_exists($instance, $methodAction)) {
-                    $this->showError(500, "Método não encontrado: {$methodAction} em {$controller}");
-                }
-
-                try {
-                    return call_user_func_array([$instance, $methodAction], $matches);
-                } catch (\Exception $e) {
-                    $this->showError(500, 'Erro interno do servidor', [
-                        'error' => $e->getMessage(),
-                        'uri' => $uri
-                    ]);
-                }
+            if ($this->isMatchingRoute($route, $uri, $matches)) {
+                $this->executeRoute($action, $matches, $uri);
+                return;
             }
         }
 
         $this->showError(404, 'Página não encontrada', ['uri' => $uri]);
+    }
+
+    /**
+     * Verifica se a rota corresponde à URI
+     */
+    private function isMatchingRoute($route, $uri, &$matches)
+    {
+        $pattern = $this->convertRouteToPattern($route);
+        return preg_match($pattern, $uri, $matches);
+    }
+
+    /**
+     * Converte rota com parâmetros para padrão regex
+     */
+    private function convertRouteToPattern($route)
+    {
+        $pattern = preg_replace("/\{[a-zA-Z_]+\}/", "([0-9a-zA-Z_-]+)", $route);
+        return "#^" . $pattern . "$#";
+    }
+
+    /**
+     * Executa a ação da rota
+     */
+    private function executeRoute($action, $params, $uri)
+    {
+        array_shift($params); // Remove a string completa da URI
+
+        [$controllerName, $methodName] = explode('@', $action);
+        $controllerClass = "App\\Modules\\" . $controllerName;
+
+        $this->validateController($controllerClass);
+        $this->validateMethod($controllerClass, $methodName);
+
+        $controllerInstance = new $controllerClass();
+
+        try {
+            call_user_func_array([$controllerInstance, $methodName], $params);
+        } catch (\Exception $e) {
+            $this->showError(500, 'Erro interno do servidor', [
+                'error' => $e->getMessage(),
+                'uri' => $uri
+            ]);
+        }
+    }
+
+    /**
+     * Valida se o controller existe
+     */
+    private function validateController($controllerClass)
+    {
+        if (!class_exists($controllerClass)) {
+            $this->showError(500, "Controlador não encontrado: {$controllerClass}");
+        }
+    }
+
+    /**
+     * Valida se o método existe no controller
+     */
+    private function validateMethod($controllerClass, $methodName)
+    {
+        if (!method_exists($controllerClass, $methodName)) {
+            $this->showError(500, "Método não encontrado: {$methodName} em {$controllerClass}");
+        }
     }
 }

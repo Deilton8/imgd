@@ -9,7 +9,8 @@ use App\Modules\Publication\Models\Publication;
 
 class HomeController extends Controller
 {
-    private const ITEMS_LIMIT = 3;
+    private const RECENT_ITEMS_LIMIT = 3;
+    private const DEFAULT_CHURCH_TITLE = "Igreja Ministério da Graça de Deus - IMGD";
 
     private Event $eventModel;
     private Sermon $sermonModel;
@@ -27,7 +28,7 @@ class HomeController extends Controller
         $nextEvent = $this->eventModel->getNextEvent();
 
         $data = [
-            "title" => "Igreja Ministério da Graça de Deus - IMGD",
+            "title" => self::DEFAULT_CHURCH_TITLE,
             "eventos" => $this->getRecentEvents(),
             "sermoes" => $this->getRecentSermons(),
             "publicacoes" => $this->getRecentPublications(),
@@ -39,7 +40,7 @@ class HomeController extends Controller
 
     private function getRecentEvents(): array
     {
-        return $this->getItemsWithMedia(
+        return $this->getRecentItemsWithMedia(
             $this->eventModel,
             'findWithMedia'
         );
@@ -47,7 +48,7 @@ class HomeController extends Controller
 
     private function getRecentSermons(): array
     {
-        return $this->getItemsWithMedia(
+        return $this->getRecentItemsWithMedia(
             $this->sermonModel,
             'findWithMedia'
         );
@@ -55,19 +56,20 @@ class HomeController extends Controller
 
     private function getRecentPublications(): array
     {
-        return $this->getItemsWithMedia(
+        return $this->getRecentItemsWithMedia(
             $this->publicationModel,
             'findWithMedia'
         );
     }
 
-    private function getItemsWithMedia(object $model, string $mediaMethod): array
+    private function getRecentItemsWithMedia(object $model, string $mediaMethod): array
     {
-        $items = array_slice($model->all(), 0, self::ITEMS_LIMIT);
+        $allItems = $model->getAll();
+        $recentItems = array_slice($allItems, 0, self::RECENT_ITEMS_LIMIT);
 
         return array_map(
             fn($item) => $model->$mediaMethod($item['id']),
-            $items
+            $recentItems
         );
     }
 }

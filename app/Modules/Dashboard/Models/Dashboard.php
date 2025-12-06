@@ -4,10 +4,14 @@ namespace App\Modules\Dashboard\Models;
 use App\Core\Model;
 use PDO;
 use PDOException;
+use DateTime;
 
 class Dashboard extends Model
 {
-    protected $tables = [
+    private const DEFAULT_LIMIT = 5;
+    private const STATISTICS_MONTHS = 6;
+
+    private array $tableLabels = [
         'usuarios' => 'Usuários',
         'publicacoes' => 'Publicações',
         'eventos' => 'Eventos',
@@ -16,121 +20,151 @@ class Dashboard extends Model
         'mensagens_contato' => 'Mensagens'
     ];
 
-    public function getEstatisticas(): array
+    private array $activityIcons = [
+        'publicacao' => '📝',
+        'evento' => '📅',
+        'sermao' => '🎤',
+        'mensagem' => '✉️'
+    ];
+
+    private array $activityColors = [
+        'publicacao' => 'text-green-600 bg-green-100',
+        'evento' => 'text-blue-600 bg-blue-100',
+        'sermao' => 'text-purple-600 bg-purple-100',
+        'mensagem' => 'text-orange-600 bg-orange-100'
+    ];
+
+    public function getStatistics(): array
     {
-        $estatisticas = [];
+        $statistics = [];
 
         try {
-            // Estatísticas básicas das tabelas
-            foreach ($this->tables as $tabela => $label) {
-                $stmt = $this->db->prepare("SELECT COUNT(*) AS total FROM {$tabela}");
-                $stmt->execute();
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                $estatisticas[$tabela] = [
-                    'total' => (int) ($result['total'] ?? 0),
-                    'label' => $label
-                ];
-            }
+            $statistics = $this->getBasicTableStatistics();
+            $statistics = array_merge($statistics, $this->getAdditionalStatistics());
 
-            // Estatísticas adicionais - garantir que todas as chaves existam
-            $estatisticas['usuarios_ativos'] = $this->getUsuariosAtivos();
-            $estatisticas['eventos_hoje'] = $this->getEventosHoje();
-            $estatisticas['mensagens_nao_lidas'] = $this->getMensagensNaoLidas();
+            $statistics = $this->ensureAllStatisticsKeys($statistics);
 
-            // Garantir que todas as chaves esperadas existam
-            $chavesEsperadas = [
-                'usuarios',
-                'publicacoes',
-                'eventos',
-                'sermoes',
-                'midia',
-                'mensagens_contato',
-                'usuarios_ativos',
-                'eventos_hoje',
-                'mensagens_nao_lidas'
-            ];
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar estatísticas: " . $exception->getMessage());
+            $statistics = $this->getFallbackStatistics();
+        }
 
-            foreach ($chavesEsperadas as $chave) {
-                if (!isset($estatisticas[$chave])) {
-                    $estatisticas[$chave] = is_array($estatisticas[$chave] ?? null)
-                        ? ['total' => 0, 'label' => ucfirst(str_replace('_', ' ', $chave))]
-                        : 0;
-                }
-            }
+        return $statistics;
+    }
 
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar estatísticas: " . $e->getMessage());
+    private function getBasicTableStatistics(): array
+    {
+        $statistics = [];
 
-            // Retornar estrutura vazia em caso de erro
-            $estatisticas = [
-                'usuarios' => ['total' => 0, 'label' => 'Usuários'],
-                'publicacoes' => ['total' => 0, 'label' => 'Publicações'],
-                'eventos' => ['total' => 0, 'label' => 'Eventos'],
-                'sermoes' => ['total' => 0, 'label' => 'Sermões'],
-                'midia' => ['total' => 0, 'label' => 'Mídias'],
-                'mensagens_contato' => ['total' => 0, 'label' => 'Mensagens'],
-                'usuarios_ativos' => 0,
-                'eventos_hoje' => 0,
-                'mensagens_nao_lidas' => 0
+        foreach ($this->tableLabels as $tableName => $label) {
+            $query = "SELECT COUNT(*) AS total FROM {$tableName}";
+            $statement = $this->database->query($query);
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+            $statistics[$tableName] = [
+                'total' => (int) ($result['total'] ?? 0),
+                'label' => $label
             ];
         }
 
-        return $estatisticas;
+        return $statistics;
     }
 
-    private function getUsuariosAtivos(): int
+    private function getAdditionalStatistics(): array
+    {
+        return [
+            'usuarios_ativos' => $this->countActiveUsers(),
+            'eventos_hoje' => $this->countTodayEvents(),
+            'mensagens_nao_lidas' => $this->countUnreadMessages()
+        ];
+    }
+
+    private function ensureAllStatisticsKeys(array $statistics): array
+    {
+        $expectedKeys = [
+            'usuarios',
+            'publicacoes',
+            'eventos',
+            'sermoes',
+            'midia',
+            'mensagens_contato',
+            'usuarios_ativos',
+            'eventos_hoje',
+            'mensagens_nao_lidas'
+        ];
+
+        foreach ($expectedKeys as $key) {
+            if (!isset($statistics[$key])) {
+                $statistics[$key] = is_array($statistics[$key] ?? null)
+                    ? ['total' => 0, 'label' => ucfirst(str_replace('_', ' ', $key))]
+                    : 0;
+            }
+        }
+
+        return $statistics;
+    }
+
+    private function countActiveUsers(): int
     {
         try {
-            $stmt = $this->db->prepare("
-                SELECT COUNT(*) AS total 
-                FROM usuarios 
-                WHERE status = 'ativo'
-            ");
-            $stmt->execute();
-            return (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-        } catch (PDOException $e) {
-            error_log("Erro ao contar usuários ativos: " . $e->getMessage());
+            $query = "SELECT COUNT(*) AS total FROM usuarios WHERE status = 'ativo'";
+            $statement = $this->database->query($query);
+            return (int) $statement->fetch(PDO::FETCH_ASSOC)['total'];
+        } catch (PDOException $exception) {
+            error_log("Erro ao contar usuários ativos: " . $exception->getMessage());
             return 0;
         }
     }
 
-    private function getEventosHoje(): int
+    private function countTodayEvents(): int
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT COUNT(*) AS total 
                 FROM eventos 
                 WHERE DATE(data_inicio) = CURDATE() 
                 AND status = 'ativo'
-            ");
-            $stmt->execute();
-            return (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-        } catch (PDOException $e) {
-            error_log("Erro ao contar eventos de hoje: " . $e->getMessage());
+            ";
+
+            $statement = $this->database->query($query);
+            return (int) $statement->fetch(PDO::FETCH_ASSOC)['total'];
+        } catch (PDOException $exception) {
+            error_log("Erro ao contar eventos de hoje: " . $exception->getMessage());
             return 0;
         }
     }
 
-    private function getMensagensNaoLidas(): int
+    private function countUnreadMessages(): int
     {
         try {
-            $stmt = $this->db->prepare("
-                SELECT COUNT(*) AS total 
-                FROM mensagens_contato 
-                WHERE lida = 0
-            ");
-            $stmt->execute();
-            return (int) $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-        } catch (PDOException $e) {
-            error_log("Erro ao contar mensagens não lidas: " . $e->getMessage());
+            $query = "SELECT COUNT(*) AS total FROM mensagens_contato WHERE lida = 0";
+            $statement = $this->database->query($query);
+            return (int) $statement->fetch(PDO::FETCH_ASSOC)['total'];
+        } catch (PDOException $exception) {
+            error_log("Erro ao contar mensagens não lidas: " . $exception->getMessage());
             return 0;
         }
     }
 
-    public function getProximosEventos(int $limite = 5): array
+    private function getFallbackStatistics(): array
+    {
+        return [
+            'usuarios' => ['total' => 0, 'label' => 'Usuários'],
+            'publicacoes' => ['total' => 0, 'label' => 'Publicações'],
+            'eventos' => ['total' => 0, 'label' => 'Eventos'],
+            'sermoes' => ['total' => 0, 'label' => 'Sermões'],
+            'midia' => ['total' => 0, 'label' => 'Mídias'],
+            'mensagens_contato' => ['total' => 0, 'label' => 'Mensagens'],
+            'usuarios_ativos' => 0,
+            'eventos_hoje' => 0,
+            'mensagens_nao_lidas' => 0
+        ];
+    }
+
+    public function getUpcomingEvents(int $limit = self::DEFAULT_LIMIT): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT 
                     id, 
                     titulo, 
@@ -144,30 +178,35 @@ class Dashboard extends Model
                 WHERE data_inicio >= NOW() 
                 AND status = 'ativo'
                 ORDER BY data_inicio ASC
-                LIMIT :limite
-            ");
-            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
-            $stmt->execute();
+                LIMIT :limit
+            ";
 
-            $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $statement = $this->database->prepare($query);
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $statement->execute();
 
-            // Formatar dados
-            foreach ($eventos as &$evento) {
-                $evento['data_formatada'] = date('d/m H:i', strtotime($evento['data_inicio']));
-                $evento['dias_restantes'] = $this->calcularDiasRestantes($evento['data_inicio']);
-            }
-
-            return $eventos;
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar próximos eventos: " . $e->getMessage());
+            $events = $statement->fetchAll(PDO::FETCH_ASSOC);
+            return $this->formatEventsData($events);
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar próximos eventos: " . $exception->getMessage());
             return [];
         }
     }
 
-    public function getUltimasPublicacoes(int $limite = 5): array
+    private function formatEventsData(array $events): array
+    {
+        foreach ($events as &$event) {
+            $event['data_formatada'] = date('d/m H:i', strtotime($event['data_inicio']));
+            $event['dias_restantes'] = $this->calculateDaysRemaining($event['data_inicio']);
+        }
+
+        return $events;
+    }
+
+    public function getLatestPublications(int $limit = self::DEFAULT_LIMIT): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT 
                     p.id,
                     p.titulo,
@@ -181,30 +220,35 @@ class Dashboard extends Model
                 LEFT JOIN usuarios u ON p.autor_id = u.id
                 WHERE p.status = 'publicado'
                 ORDER BY p.publicado_em DESC
-                LIMIT :limite
-            ");
-            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
-            $stmt->execute();
+                LIMIT :limit
+            ";
 
-            $publicacoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $statement = $this->database->prepare($query);
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $statement->execute();
 
-            // Formatar dados
-            foreach ($publicacoes as &$pub) {
-                $pub['publicado_formatado'] = date('d/m/Y', strtotime($pub['publicado_em']));
-                $pub['tempo_decorrido'] = $this->calcularTempoDecorrido($pub['publicado_em']);
-            }
-
-            return $publicacoes;
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar últimas publicações: " . $e->getMessage());
+            $publications = $statement->fetchAll(PDO::FETCH_ASSOC);
+            return $this->formatPublicationsData($publications);
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar últimas publicações: " . $exception->getMessage());
             return [];
         }
     }
 
-    public function getUltimosSermoes(int $limite = 5): array
+    private function formatPublicationsData(array $publications): array
+    {
+        foreach ($publications as &$publication) {
+            $publication['publicado_formatado'] = date('d/m/Y', strtotime($publication['publicado_em']));
+            $publication['tempo_decorrido'] = $this->calculateElapsedTime($publication['publicado_em']);
+        }
+
+        return $publications;
+    }
+
+    public function getLatestSermons(int $limit = self::DEFAULT_LIMIT): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT 
                     id,
                     titulo,
@@ -218,29 +262,34 @@ class Dashboard extends Model
                 FROM sermoes
                 WHERE status = 'publicado'
                 ORDER BY data DESC
-                LIMIT :limite
-            ");
-            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
-            $stmt->execute();
+                LIMIT :limit
+            ";
 
-            $sermoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $statement = $this->database->prepare($query);
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $statement->execute();
 
-            // Formatar dados
-            foreach ($sermoes as &$sermao) {
-                $sermao['data_formatada'] = date('d/m/Y', strtotime($sermao['data']));
-            }
-
-            return $sermoes;
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar últimos sermões: " . $e->getMessage());
+            $sermons = $statement->fetchAll(PDO::FETCH_ASSOC);
+            return $this->formatSermonsData($sermons);
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar últimos sermões: " . $exception->getMessage());
             return [];
         }
     }
 
-    public function getUltimasMensagens(int $limite = 5): array
+    private function formatSermonsData(array $sermons): array
+    {
+        foreach ($sermons as &$sermon) {
+            $sermon['data_formatada'] = date('d/m/Y', strtotime($sermon['data']));
+        }
+
+        return $sermons;
+    }
+
+    public function getLatestMessages(int $limit = self::DEFAULT_LIMIT): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT 
                     id,
                     nome,
@@ -251,32 +300,35 @@ class Dashboard extends Model
                     lida
                 FROM mensagens_contato
                 ORDER BY criado_em DESC
-                LIMIT :limite
-            ");
-            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
-            $stmt->execute();
+                LIMIT :limit
+            ";
 
-            $mensagens = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $statement = $this->database->prepare($query);
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $statement->execute();
 
-            // Formatar dados
-            foreach ($mensagens as &$msg) {
-                $msg['criado_formatado'] = date('d/m/Y H:i', strtotime($msg['criado_em']));
-                $msg['mensagem_resumida'] = $this->resumirTexto($msg['mensagem'], 80);
-            }
-
-            return $mensagens;
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar últimas mensagens: " . $e->getMessage());
+            $messages = $statement->fetchAll(PDO::FETCH_ASSOC);
+            return $this->formatMessagesData($messages);
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar últimas mensagens: " . $exception->getMessage());
             return [];
         }
     }
 
-    // 📊 Dados para gráficos e análises
+    private function formatMessagesData(array $messages): array
+    {
+        foreach ($messages as &$message) {
+            $message['criado_formatado'] = date('d/m/Y H:i', strtotime($message['criado_em']));
+            $message['mensagem_resumida'] = $this->summarizeText($message['mensagem'], 80);
+        }
 
-    public function getEventosPorStatus(): array
+        return $messages;
+    }
+
+    public function getEventsByStatus(): array
     {
         try {
-            $sql = "
+            $query = "
                 SELECT 
                     status, 
                     COUNT(*) AS total 
@@ -284,17 +336,18 @@ class Dashboard extends Model
                 GROUP BY status
                 ORDER BY total DESC
             ";
-            return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar eventos por status: " . $e->getMessage());
+
+            return $this->database->query($query)->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar eventos por status: " . $exception->getMessage());
             return [];
         }
     }
 
-    public function getPublicacoesPorCategoria(): array
+    public function getPublicationsByCategory(): array
     {
         try {
-            $sql = "
+            $query = "
                 SELECT 
                     categoria, 
                     COUNT(*) AS total 
@@ -303,17 +356,18 @@ class Dashboard extends Model
                 GROUP BY categoria
                 ORDER BY total DESC
             ";
-            return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar publicações por categoria: " . $e->getMessage());
+
+            return $this->database->query($query)->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar publicações por categoria: " . $exception->getMessage());
             return [];
         }
     }
 
-    public function getEstatisticasMensais(int $meses = 6): array
+    public function getMonthlyStatistics(int $months = self::STATISTICS_MONTHS): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT 
                     DATE_FORMAT(publicado_em, '%Y-%m') AS mes,
                     COUNT(*) AS total
@@ -322,111 +376,101 @@ class Dashboard extends Model
                 AND status = 'publicado'
                 GROUP BY mes
                 ORDER BY mes ASC
-            ");
-            $stmt->bindValue(':meses', $meses, PDO::PARAM_INT);
-            $stmt->execute();
+            ";
 
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar estatísticas mensais: " . $e->getMessage());
+            $statement = $this->database->prepare($query);
+            $statement->bindValue(':meses', $months, PDO::PARAM_INT);
+            $statement->execute();
+
+            return $statement->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar estatísticas mensais: " . $exception->getMessage());
             return [];
         }
     }
 
-    public function getAtividadeRecente(int $limite = 10): array
+    public function getRecentActivity(int $limit = 10): array
     {
         try {
-            // Unificar atividades de diferentes tabelas
-            $queries = [
+            $activityQueries = [
                 "SELECT 'publicacao' as tipo, id, titulo as descricao, publicado_em as data FROM publicacoes WHERE status = 'publicado'",
                 "SELECT 'evento' as tipo, id, titulo as descricao, data_inicio as data FROM eventos WHERE status = 'ativo'",
                 "SELECT 'sermao' as tipo, id, titulo as descricao, data FROM sermoes WHERE status = 'publicado'",
                 "SELECT 'mensagem' as tipo, id, CONCAT('Mensagem de ', nome) as descricao, criado_em as data FROM mensagens_contato"
             ];
 
-            $unionQuery = implode(" UNION ALL ", $queries) . " ORDER BY data DESC LIMIT :limite";
+            $unionQuery = implode(" UNION ALL ", $activityQueries) . " ORDER BY data DESC LIMIT :limit";
 
-            $stmt = $this->db->prepare($unionQuery);
-            $stmt->bindValue(':limite', $limite, PDO::PARAM_INT);
-            $stmt->execute();
+            $statement = $this->database->prepare($unionQuery);
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $statement->execute();
 
-            $atividades = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            // Formatar dados
-            foreach ($atividades as &$atividade) {
-                $atividade['data_formatada'] = date('d/m H:i', strtotime($atividade['data']));
-                $atividade['icone'] = $this->getIconePorTipo($atividade['tipo']);
-                $atividade['cor'] = $this->getCorPorTipo($atividade['tipo']);
-            }
-
-            return $atividades;
-        } catch (PDOException $e) {
-            error_log("Erro ao buscar atividade recente: " . $e->getMessage());
+            $activities = $statement->fetchAll(PDO::FETCH_ASSOC);
+            return $this->formatActivitiesData($activities);
+        } catch (PDOException $exception) {
+            error_log("Erro ao buscar atividade recente: " . $exception->getMessage());
             return [];
         }
     }
 
-    // Métodos auxiliares
-
-    private function calcularDiasRestantes(string $data): string
+    private function formatActivitiesData(array $activities): array
     {
-        $hoje = new \DateTime();
-        $dataEvento = new \DateTime($data);
-        $diferenca = $hoje->diff($dataEvento);
+        foreach ($activities as &$activity) {
+            $activity['data_formatada'] = date('d/m H:i', strtotime($activity['data']));
+            $activity['icone'] = $this->getIconByType($activity['tipo']);
+            $activity['cor'] = $this->getColorByType($activity['tipo']);
+        }
 
-        if ($diferenca->days === 0) {
+        return $activities;
+    }
+
+    private function calculateDaysRemaining(string $date): string
+    {
+        $today = new DateTime();
+        $eventDate = new DateTime($date);
+        $difference = $today->diff($eventDate);
+
+        if ($difference->days === 0) {
             return 'Hoje';
-        } elseif ($diferenca->days === 1) {
+        } elseif ($difference->days === 1) {
             return 'Amanhã';
         } else {
-            return "Em {$diferenca->days} dias";
+            return "Em {$difference->days} dias";
         }
     }
 
-    private function calcularTempoDecorrido(string $data): string
+    private function calculateElapsedTime(string $date): string
     {
-        $agora = new \DateTime();
-        $dataPublicacao = new \DateTime($data);
-        $diferenca = $agora->diff($dataPublicacao);
+        $now = new DateTime();
+        $publicationDate = new DateTime($date);
+        $difference = $now->diff($publicationDate);
 
-        if ($diferenca->y > 0)
-            return $diferenca->y . ' ano' . ($diferenca->y > 1 ? 's' : '');
-        if ($diferenca->m > 0)
-            return $diferenca->m . ' mês' . ($diferenca->m > 1 ? 'es' : '');
-        if ($diferenca->d > 0)
-            return $diferenca->d . ' dia' . ($diferenca->d > 1 ? 's' : '');
-        if ($diferenca->h > 0)
-            return $diferenca->h . ' hora' . ($diferenca->h > 1 ? 's' : '');
-        return $diferenca->i . ' minuto' . ($diferenca->i > 1 ? 's' : '');
+        if ($difference->y > 0)
+            return $difference->y . ' ano' . ($difference->y > 1 ? 's' : '');
+        if ($difference->m > 0)
+            return $difference->m . ' mês' . ($difference->m > 1 ? 'es' : '');
+        if ($difference->d > 0)
+            return $difference->d . ' dia' . ($difference->d > 1 ? 's' : '');
+        if ($difference->h > 0)
+            return $difference->h . ' hora' . ($difference->h > 1 ? 's' : '');
+        return $difference->i . ' minuto' . ($difference->i > 1 ? 's' : '');
     }
 
-    private function resumirTexto(string $texto, int $limite): string
+    private function summarizeText(string $text, int $limit): string
     {
-        if (strlen($texto) <= $limite) {
-            return $texto;
+        if (strlen($text) <= $limit) {
+            return $text;
         }
-        return substr($texto, 0, $limite) . '...';
+        return substr($text, 0, $limit) . '...';
     }
 
-    private function getIconePorTipo(string $tipo): string
+    private function getIconByType(string $type): string
     {
-        $icones = [
-            'publicacao' => '📝',
-            'evento' => '📅',
-            'sermao' => '🎤',
-            'mensagem' => '✉️'
-        ];
-        return $icones[$tipo] ?? '📌';
+        return $this->activityIcons[$type] ?? '📌';
     }
 
-    private function getCorPorTipo(string $tipo): string
+    private function getColorByType(string $type): string
     {
-        $cores = [
-            'publicacao' => 'text-green-600 bg-green-100',
-            'evento' => 'text-blue-600 bg-blue-100',
-            'sermao' => 'text-purple-600 bg-purple-100',
-            'mensagem' => 'text-orange-600 bg-orange-100'
-        ];
-        return $cores[$tipo] ?? 'text-gray-600 bg-gray-100';
+        return $this->activityColors[$type] ?? 'text-gray-600 bg-gray-100';
     }
 }
