@@ -38,7 +38,7 @@ class PublicSermonController extends Controller
         return $enrichedSermons;
     }
 
-    public function show(int $id): void
+    public function show(string $id): void
     {
         $sermon = $this->sermonModel->findWithMedia($id);
 

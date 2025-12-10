@@ -39,7 +39,7 @@ class SermonController extends Controller
 
     public function index(): void
     {
-        $page = (int) ($_GET['page'] ?? 1);
+        $page = (string) ($_GET['page'] ?? 1);
         $filters = $this->extractFiltersFromRequest();
 
         $result = $this->sermonModel->getPaginatedList($page, self::DEFAULT_PER_PAGE, $filters);
@@ -65,7 +65,7 @@ class SermonController extends Controller
         ];
     }
 
-    public function show(int $id): void
+    public function show(string $id): void
     {
         $sermon = $this->sermonModel->findWithMedia($id);
         $title = "Detalhes do Sermão";
@@ -111,7 +111,7 @@ class SermonController extends Controller
         ]);
     }
 
-    public function edit(int $id): void
+    public function edit(string $id): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->handleSermonUpdate($id);
@@ -121,7 +121,7 @@ class SermonController extends Controller
         $this->renderEditForm($id);
     }
 
-    private function handleSermonUpdate(int $id): void
+    private function handleSermonUpdate(string $id): void
     {
         $this->sermonModel->updateRecord($id, $_POST);
 
@@ -133,7 +133,7 @@ class SermonController extends Controller
         exit;
     }
 
-    private function renderEditForm(int $id): void
+    private function renderEditForm(string $id): void
     {
         $sermon = $this->sermonModel->findWithMedia($id);
         $mediaItems = $this->mediaModel->getAll();
@@ -150,7 +150,7 @@ class SermonController extends Controller
         ]);
     }
 
-    public function delete(int $id): void
+    public function delete(string $id): void
     {
         $this->sermonModel->deleteRecord($id);
         header("Location: /admin/sermoes");
