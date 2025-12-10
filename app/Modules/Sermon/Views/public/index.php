@@ -57,7 +57,7 @@ ob_start();
                                                     <div class="swiper-slide">
                                                         <img src="/<?php echo $midia['caminho_arquivo']; ?>"
                                                             alt="<?php echo htmlspecialchars($sermao['titulo']); ?>"
-                                                            class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                                            class="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105">
                                                     </div>
                                                 <?php endif; ?>
                                             <?php endforeach; ?>

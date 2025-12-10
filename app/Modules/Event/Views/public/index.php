@@ -3,7 +3,7 @@ ob_start();
 ?>
 
 <!-- Page Header -->
-<section class="relative bg-gradient-to-br from-yellow-900 via-yellow-800 to-yellow-700 py-20 text-white">
+<section class="relative bg-gradient-to-br from-yellow-900 via-yellow-800 to-yellow-700 py-20 text-white h-100 flex items-center justify-center">
     <div class="absolute inset-0 bg-black/40"></div>
     <div class="container mx-auto px-4 relative z-10">
         <div class="max-w-4xl mx-auto text-center">
@@ -176,7 +176,7 @@ ob_start();
                             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
                                 <a href="/evento/<?php echo $evento['id']; ?>"
                                     class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-semibold transition-colors duration-300 group/btn">
-                                    <span>Ver detalhes</span>
+                                    <span>Ver evento completo</span>
                                     <i
                                         class="fas fa-arrow-right ml-2 text-sm group-hover/btn:translate-x-1 transition-transform"></i>
                                 </a>

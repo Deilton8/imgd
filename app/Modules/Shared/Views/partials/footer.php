@@ -270,10 +270,6 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
                         <?php if (!empty($recentPosts)): ?>
                             <?php foreach ($recentPosts as $post): ?>
                                 <?php
-                                // Thumbnail: primeira mídia imagem ou placeholder
-                                $thumb = $placeholderImage;
-                                $altText = "Thumbnail para " . htmlspecialchars($post['titulo']);
-
                                 if (!empty($post['midias'][0]['caminho_arquivo'])) {
                                     $thumbPath = $post['midias'][0]['caminho_arquivo'];
                                     $thumb = '/' . ltrim($thumbPath, '/');
@@ -283,7 +279,7 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
                                 $published = !empty($post['publicado_em']) ?
                                     date("d M, Y", strtotime($post['publicado_em'])) : '';
 
-                                $postUrl = "/publicacao/" . $post['id'];
+                                $postUrl = "/blog/" . $post['id'];
                                 $title = htmlspecialchars($post['titulo']);
                                 ?>
                                 <article

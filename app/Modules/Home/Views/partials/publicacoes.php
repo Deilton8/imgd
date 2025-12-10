@@ -31,7 +31,7 @@
                                                 <a href="/blog/<?= $pubId ?>" class="block relative overflow-hidden">
                                                     <img src="/<?= $midia['caminho_arquivo'] ?>"
                                                         alt="<?= $pubTitulo ?> - Imagem <?= $index + 1 ?>"
-                                                        class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        class="w-full h-64 object-contain transition-transform duration-500 group-hover:scale-105"
                                                         loading="lazy">
                                                     <div
                                                         class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300">
@@ -69,7 +69,7 @@
 
                             <!-- Category Badge -->
                             <?php if ($pubCategoria): ?>
-                                <div class="absolute top-4 left-4">
+                                <div class="absolute top-4 left-4 z-10">
                                     <span class="bg-yellow-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
                                         <?= $pubCategoria ?>
                                     </span>

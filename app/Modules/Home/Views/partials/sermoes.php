@@ -33,7 +33,7 @@
                                                 <a href="/sermao/<?= $sermaoId ?>" class="block relative overflow-hidden">
                                                     <img src="/<?= $midia['caminho_arquivo'] ?>"
                                                         alt="<?= $sermaoTitulo ?> - Imagem <?= $index + 1 ?>"
-                                                        class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        class="w-full h-64 object-contain transition-transform duration-500 group-hover:scale-105"
                                                         loading="lazy">
                                                     <div
                                                         class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300">
@@ -108,9 +108,9 @@
 
                             <!-- Date Badge -->
                             <?php if ($sermaoData): ?>
-                                <div class="absolute top-4 right-4">
+                                <div class="absolute top-4 right-4 z-10">
                                     <span
-                                        class="bg-white/90 backdrop-blur-sm text-gray-700 text-xs font-semibold px-3 py-1 rounded-lg shadow-md">
+                                        class="bg-yellow-500 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1 rounded-lg shadow-md">
                                         <?= $sermaoData ?>
                                     </span>
                                 </div>

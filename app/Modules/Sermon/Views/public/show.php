@@ -1,5 +1,29 @@
 <?php
 ob_start();
+
+$icones = [
+    'imagem' => 'fas fa-image',
+    'video' => 'fas fa-video',
+    'audio' => 'fas fa-music',
+    'pdf' => 'fas fa-file-pdf',
+    'outros' => 'fas fa-file'
+];
+
+$cores = [
+    'imagem' => 'from-yellow-500 to-yellow-600',
+    'video' => 'from-blue-500 to-blue-600',
+    'audio' => 'from-green-500 to-green-600',
+    'pdf' => 'from-red-500 to-red-600',
+    'outros' => 'from-gray-500 to-gray-600'
+];
+
+$nomes = [
+    'imagem' => 'Fotos',
+    'video' => 'Vídeos',
+    'audio' => 'Áudios',
+    'pdf' => 'Documentos',
+    'outros' => 'Outros Arquivos'
+];
 ?>
 
 <!-- Breadcrumb -->
@@ -27,7 +51,7 @@ ob_start();
 <!-- Main Content -->
 <div class="py-16 bg-white">
     <div class="container mx-auto px-4">
-        <div class="max-w-5xl mx-auto">
+        <div class="max-w-6xl mx-auto">
             <!-- Sermon Header -->
             <div class="text-center mb-12">
                 <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
@@ -127,49 +151,47 @@ ob_start();
                     </div>
 
                     <!-- Filtros por Tipo -->
-                    <?php if (count($midiasPorTipo) > 1): ?>
-                        <div class="flex flex-wrap justify-center gap-4 mb-8">
-                            <?php foreach ($midiasPorTipo as $tipo => $midias): ?>
-                                <?php
-                                $icones = [
-                                    'imagem' => 'fas fa-image',
-                                    'video' => 'fas fa-video',
-                                    'audio' => 'fas fa-music',
-                                    'pdf' => 'fas fa-file-pdf',
-                                    'outros' => 'fas fa-file'
-                                ];
+                    <div class="flex flex-wrap justify-center gap-4 mb-8">
+                        <?php foreach ($midiasPorTipo as $tipo => $midias): ?>
+                            <?php
+                            $icones = [
+                                'imagem' => 'fas fa-image',
+                                'video' => 'fas fa-video',
+                                'audio' => 'fas fa-music',
+                                'pdf' => 'fas fa-file-pdf',
+                                'outros' => 'fas fa-file'
+                            ];
 
-                                $cores = [
-                                    'imagem' => 'from-yellow-500 to-yellow-600',
-                                    'video' => 'from-yellow-500 to-yellow-600',
-                                    'audio' => 'from-yellow-500 to-yellow-600',
-                                    'pdf' => 'from-yellow-500 to-yellow-600',
-                                    'outros' => 'from-yellow-500 to-yellow-600'
-                                ];
+                            $cores = [
+                                'imagem' => 'from-yellow-500 to-yellow-600',
+                                'video' => 'from-yellow-500 to-yellow-600',
+                                'audio' => 'from-yellow-500 to-yellow-600',
+                                'pdf' => 'from-yellow-500 to-yellow-600',
+                                'outros' => 'from-yellow-500 to-yellow-600'
+                            ];
 
-                                $nomes = [
-                                    'imagem' => 'Fotos',
-                                    'video' => 'Vídeos',
-                                    'audio' => 'Áudios',
-                                    'pdf' => 'Documentos',
-                                    'outros' => 'Outros Arquivos'
-                                ];
-                                ?>
+                            $nomes = [
+                                'imagem' => 'Fotos',
+                                'video' => 'Vídeos',
+                                'audio' => 'Áudios',
+                                'pdf' => 'Documentos',
+                                'outros' => 'Outros Arquivos'
+                            ];
+                            ?>
 
-                                <button @click="scrollToSection('<?= $tipo ?>')"
-                                    class="flex items-center space-x-3 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-yellow-300 px-6 py-3 rounded-xl font-semibold text-gray-700 hover:text-yellow-700 transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg group">
-                                    <div
-                                        class="w-10 h-10 bg-gradient-to-br <?= $cores[$tipo] ?> rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-                                        <i class="<?= $icones[$tipo] ?> text-white text-sm"></i>
-                                    </div>
-                                    <div class="text-left">
-                                        <div class="font-bold text-lg"><?= $nomes[$tipo] ?></div>
-                                        <div class="text-sm text-gray-500"><?= count($midias) ?> arquivo(s)</div>
-                                    </div>
-                                </button>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
+                            <button @click="scrollToSection('<?= $tipo ?>')"
+                                class="flex items-center space-x-3 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-yellow-300 px-6 py-3 rounded-xl font-semibold text-gray-700 hover:text-yellow-700 transition-all duration-300 transform hover:scale-105 shadow-sm hover:shadow-lg group">
+                                <div
+                                    class="w-10 h-10 bg-gradient-to-br <?= $cores[$tipo] ?> rounded-lg flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                    <i class="<?= $icones[$tipo] ?> text-white text-sm"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div class="font-bold text-lg"><?= $nomes[$tipo] ?></div>
+                                    <div class="text-sm text-gray-500"><?= count($midias) ?> arquivo(s)</div>
+                                </div>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
 
                     <!-- Galeria por Tipo -->
                     <div class="space-y-12">
