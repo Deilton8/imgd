@@ -133,11 +133,11 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
             <div class="flex flex-wrap justify-center gap-4">
                 <a href="<?php echo htmlspecialchars($socialLinks['facebook']); ?>" target="_blank"
                     rel="noopener noreferrer"
-                    class="group relative bg-black/5 hover:bg-black/10 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-black/10"
+                    class="group relative bg-blue-600 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-black/10"
                     aria-label="Siga-nos no Facebook">
                     <div class="flex items-center space-x-3">
                         <div
-                            class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            class="w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fab fa-facebook-f text-white text-sm"></i>
                         </div>
                         <span class="font-semibold text-black">Facebook</span>
@@ -146,11 +146,11 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
 
                 <a href="<?php echo htmlspecialchars($socialLinks['youtube']); ?>" target="_blank"
                     rel="noopener noreferrer"
-                    class="group relative bg-black/5 hover:bg-black/10 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-black/10"
+                    class="group relative bg-red-600 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-black/10"
                     aria-label="Inscreva-se no nosso canal do YouTube">
                     <div class="flex items-center space-x-3">
                         <div
-                            class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            class="w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fab fa-youtube text-white text-sm"></i>
                         </div>
                         <span class="font-semibold text-black">YouTube</span>
@@ -159,11 +159,11 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
 
                 <a href="<?php echo htmlspecialchars($socialLinks['instagram']); ?>" target="_blank"
                     rel="noopener noreferrer"
-                    class="group relative bg-black/5 hover:bg-black/10 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-black/10"
+                    class="group relative bg-gradient-to-br from-purple-600 to-pink-600 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-black/10"
                     aria-label="Siga-nos no Instagram">
                     <div class="flex items-center space-x-3">
                         <div
-                            class="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            class="w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fab fa-instagram text-white text-sm"></i>
                         </div>
                         <span class="font-semibold text-black">Instagram</span>
@@ -291,7 +291,7 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
                                     <div class="flex-shrink-0 w-14 h-14 mr-4">
                                         <a href="<?php echo $postUrl; ?>" class="block">
                                             <img src="<?php echo $thumb; ?>" alt="<?php echo $altText; ?>"
-                                                class="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300 shadow-md"
+                                                class="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-300 shadow-md"
                                                 loading="lazy">
                                         </a>
                                     </div>
@@ -347,7 +347,7 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
 
                 <!-- Botão Admin - Estilo Melhorado -->
                 <a href="/admin"
-                    class="group inline-flex items-center bg-gray-100 hover:bg-yellow-600 text-gray-600 hover:text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-200 hover:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 opacity-10 hover:opacity-100"
+                    class="group inline-flex items-center bg-gray-100 hover:bg-yellow-600 text-gray-600 hover:text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-gray-200 hover:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 opacity-10 hover:opacity-100"
                     aria-label="Acessar painel administrativo" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-user-shield text-sm group-hover:scale-110 transition-transform"></i>
                 </a>
