@@ -2,6 +2,16 @@
 ob_start();
 ?>
 
+<!-- Page Header -->
+<section class="relative bg-gradient-to-br from-yellow-900 via-yellow-800 to-yellow-700 py-20 text-white">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight"><?= htmlspecialchars($publicacao['titulo']) ?></h1>
+        </div>
+    </div>
+</section>
+
 <!-- Breadcrumb -->
 <nav class="bg-gray-50 py-4 border-b border-gray-200">
     <div class="container mx-auto px-4">
@@ -30,16 +40,13 @@ ob_start();
         <div class="max-w-6xl mx-auto">
             <!-- Publication Header -->
             <div class="text-center mb-12">
-                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                    <?= htmlspecialchars($publicacao['titulo']) ?>
-                </h1>
                 <div class="w-24 h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 mx-auto mb-8 rounded-full"></div>
             </div>
 
             <!-- Publication Details -->
             <div class="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-12">
                 <!-- Publication Info Cards -->
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="grid md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
                     <?php if (!empty($publicacao['publicado_em'])): ?>
                         <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-300">
                             <div class="flex items-start space-x-4">

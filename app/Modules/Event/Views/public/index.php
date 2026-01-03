@@ -3,7 +3,7 @@ ob_start();
 ?>
 
 <!-- Page Header -->
-<section class="relative bg-gradient-to-br from-yellow-900 via-yellow-800 to-yellow-700 py-20 text-white h-100 flex items-center justify-center">
+<section class="relative bg-gradient-to-br from-yellow-900 via-yellow-800 to-yellow-700 py-20 text-white">
     <div class="absolute inset-0 bg-black/40"></div>
     <div class="container mx-auto px-4 relative z-10">
         <div class="max-w-4xl mx-auto text-center">

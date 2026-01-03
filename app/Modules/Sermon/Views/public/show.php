@@ -26,6 +26,17 @@ $nomes = [
 ];
 ?>
 
+<!-- Page Header -->
+<section class="relative bg-gradient-to-br from-yellow-900 via-yellow-800 to-yellow-700 py-20 text-white">
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight"><?= htmlspecialchars($sermao['titulo']) ?>
+            </h1>
+        </div>
+    </div>
+</section>
+
 <!-- Breadcrumb -->
 <nav class="bg-gray-50 py-4 border-b border-gray-200">
     <div class="container mx-auto px-4">
@@ -54,9 +65,6 @@ $nomes = [
         <div class="max-w-6xl mx-auto">
             <!-- Sermon Header -->
             <div class="text-center mb-12">
-                <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-                    <?= htmlspecialchars($sermao['titulo']) ?>
-                </h1>
                 <div class="w-24 h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 mx-auto mb-8 rounded-full"></div>
             </div>
 

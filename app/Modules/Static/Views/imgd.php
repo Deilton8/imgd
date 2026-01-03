@@ -2,14 +2,44 @@
 ob_start();
 ?>
 
-<!-- Page Header -->
+<!-- Page Header com Carrossel (estilo igual ao apostoloJeque.php) -->
 <header class="relative h-screen overflow-hidden">
+    <!-- Carrossel de Imagens -->
     <div class="relative h-full">
-        <div class="h-full">
-            <div class="w-full h-full">
-                <img loading="lazy" src="/assets/img/imgd.jpeg" alt="Comunidade da IMGD em culto"
-                    class="w-full h-full object-cover">
-                <div class="absolute inset-0 bg-black/50"></div>
+        <div class="swiper carrossel-imgd h-full">
+            <div class="swiper-wrapper">
+                <!-- Slide 1 -->
+                <div class="swiper-slide">
+                    <div class="w-full h-full">
+                        <img loading="lazy" src="/assets/img/imgd.jpeg" alt="Comunidade da IMGD em culto"
+                            class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/50"></div>
+                    </div>
+                </div>
+                <!-- Slide 2 -->
+                <div class="swiper-slide">
+                    <div class="w-full h-full">
+                        <img loading="lazy" src="/assets/img/ap-1.jpg" alt="Comunidade da IMGD em adoração"
+                            class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/50"></div>
+                    </div>
+                </div>
+                <!-- Slide 3 -->
+                <div class="swiper-slide">
+                    <div class="w-full h-full">
+                        <img loading="lazy" src="/assets/img/ap-3.jpg" alt="Comunidade da IMGD reunida"
+                            class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/50"></div>
+                    </div>
+                </div>
+                <!-- Slide 4 -->
+                <div class="swiper-slide">
+                    <div class="w-full h-full">
+                        <img loading="lazy" src="/assets/img/ap-4.jpg" alt="Momentos de louvor na IMGD"
+                            class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/50"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -17,11 +47,12 @@ ob_start();
         <div class="absolute inset-0 z-20 flex items-center justify-center">
             <div class="text-center text-white px-4 max-w-4xl mx-auto">
                 <!-- Mensagem Principal -->
-                <h1 class="text-5xl md:text-5xl lg:text-5xl font-bold mb-6 leading-tight">
-                    Sobre a Igreja Ministério da Graça de Deus
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+                    Igreja Ministério da Graça de Deus
                 </h1>
             </div>
         </div>
+    </div>
 </header>
 
 <!-- Breadcrumb -->
@@ -50,9 +81,6 @@ ob_start();
             <!-- Introdução -->
             <section class="mb-20 text-center" aria-labelledby="introducao-heading">
                 <div class="max-w-4xl mx-auto">
-                    <h2 id="introducao-heading" class="text-3xl md:text-4xl font-bold text-yellow-900 mb-6">
-                        Bem-vindo à Família IMGD
-                    </h2>
                     <div class="w-24 h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 mx-auto mb-8 rounded-full">
                     </div>
                     <p class="text-lg md:text-xl text-gray-700 leading-relaxed">
@@ -362,9 +390,27 @@ ob_start();
     </div>
 </main>
 
+<!-- Inicialização do Swiper -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        new Swiper('.carrossel-imgd', {
+            loop: true,
+            speed: 1000,
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            },
+            effect: 'fade',
+            fadeEffect: {
+                crossFade: true
+            },
+        });
+    });
+</script>
+
 <style>
-    /* Estilos personalizados para o carrossel */
-    .carrossel-sobre .swiper-pagination-bullet {
+    /* Estilos personalizados para o carrossel da IMGD */
+    .carrossel-imgd .swiper-pagination-bullet {
         background: white;
         opacity: 0.6;
         width: 12px;
@@ -372,14 +418,14 @@ ob_start();
         margin: 0 8px !important;
     }
 
-    .carrossel-sobre .swiper-pagination-bullet-active {
+    .carrossel-imgd .swiper-pagination-bullet-active {
         background: #f59e0b;
         opacity: 1;
         transform: scale(1.2);
     }
 
-    .carrossel-sobre .swiper-button-next,
-    .carrossel-sobre .swiper-button-prev {
+    .carrossel-imgd .swiper-button-next,
+    .carrossel-imgd .swiper-button-prev {
         color: white;
         background: rgba(255, 255, 255, 0.1);
         width: 60px;
@@ -389,13 +435,31 @@ ob_start();
         transition: all 0.3s ease;
     }
 
-    .carrossel-sobre .swiper-button-next:hover,
-    .carrossel-sobre .swiper-button-prev:hover {
+    .carrossel-imgd .swiper-button-next:hover,
+    .carrossel-imgd .swiper-button-prev:hover {
         background: rgba(245, 158, 11, 0.8);
         transform: scale(1.1);
     }
 
-    /* Animações suaves */
+    .carrossel-imgd .swiper-button-next:after,
+    .carrossel-imgd .swiper-button-prev:after {
+        font-size: 24px;
+        font-weight: bold;
+    }
+
+    /* Animações para o conteúdo */
+    .text-center h1 {
+        animation: fadeInUp 1s ease-out;
+    }
+
+    .text-center p {
+        animation: fadeInUp 1s ease-out 0.3s both;
+    }
+
+    .text-center .flex {
+        animation: fadeInUp 1s ease-out 0.6s both;
+    }
+
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -408,23 +472,40 @@ ob_start();
         }
     }
 
-    section {
-        animation: fadeInUp 0.8s ease-out;
+    /* Efeito de brilho no texto */
+    .text-center h1 {
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     }
 
     /* Responsividade */
     @media (max-width: 768px) {
-        .p-8 {
-            padding: 1.5rem;
+        .text-center h1 {
+            font-size: 3rem !important;
         }
 
-        .text-4xl {
-            font-size: 2rem;
+        .text-center p {
+            font-size: 1.25rem !important;
         }
 
-        .grid {
-            gap: 1.5rem;
+        .carrossel-imgd .swiper-button-next,
+        .carrossel-imgd .swiper-button-prev {
+            width: 40px;
+            height: 40px;
         }
+
+        .carrossel-imgd .swiper-button-next:after,
+        .carrossel-imgd .swiper-button-prev:after {
+            font-size: 18px;
+        }
+    }
+
+    /* Efeito de parallax suave */
+    .swiper-slide img {
+        transition: transform 10s ease;
+    }
+
+    .swiper-slide-active img {
+        transform: scale(1.1);
     }
 </style>
 
