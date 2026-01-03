@@ -49,6 +49,11 @@ ob_start();
                     $dataFim = !empty($evento['data_fim']) ? new DateTime($evento['data_fim']) : null;
                     $isToday = $dataInicio->format('Y-m-d') === date('Y-m-d');
                     $isUpcoming = $dataInicio > new DateTime();
+
+                    // Gerar slug se não existir
+                    if (!isset($evento['slug']) || empty($evento['slug'])) {
+                        $evento['slug'] = generateSlug($evento['titulo']);
+                    }
                     ?>
 
                     <div
@@ -56,7 +61,7 @@ ob_start();
                         <!-- Image Slider -->
                         <div class="relative h-64 overflow-hidden">
                             <?php if (!empty($evento['midias'])): ?>
-                                <a href="/evento/<?php echo $evento['id']; ?>">
+                                <a href="/evento/<?php echo $evento['slug']; ?>">
                                     <div class="swiper event-swiper h-full">
                                         <div class="swiper-wrapper">
                                             <?php foreach ($evento['midias'] as $midia): ?>
@@ -133,7 +138,7 @@ ob_start();
 
                         <!-- Content -->
                         <div class="p-6">
-                            <a href="/evento/<?php echo $evento['id']; ?>" class="block group/title mb-4">
+                            <a href="/evento/<?php echo $evento['slug']; ?>" class="block group/title mb-4">
                                 <h3
                                     class="text-xl font-bold text-gray-900 group-hover/title:text-yellow-600 transition-colors duration-300 line-clamp-2">
                                     <?php echo htmlspecialchars($evento['titulo']); ?>
@@ -174,7 +179,7 @@ ob_start();
 
                             <!-- Action buttons -->
                             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                                <a href="/evento/<?php echo $evento['id']; ?>"
+                                <a href="/evento/<?php echo $evento['slug']; ?>"
                                     class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-semibold transition-colors duration-300 group/btn">
                                     <span>Ver evento completo</span>
                                     <i
@@ -316,6 +321,13 @@ ob_start();
 </style>
 
 <?php
+// Função auxiliar para gerar slugs (fora do contexto de objeto)
+function generateSlug($string)
+{
+    $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $string), '-'));
+    return $slug;
+}
+
 $content = ob_get_clean();
 include __DIR__ . "/../../../Shared/Views/layout_public.php";
 ?>

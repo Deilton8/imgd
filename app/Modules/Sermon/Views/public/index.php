@@ -49,7 +49,7 @@ ob_start();
                         <!-- Image Slider -->
                         <div class="relative h-64 overflow-hidden">
                             <?php if (!empty($sermao['midias'])): ?>
-                                <a href="/sermao/<?php echo $sermao['id']; ?>">
+                                <a href="/sermao/<?php echo $sermao['slug']; ?>">
                                     <div class="swiper sermon-swiper h-full">
                                         <div class="swiper-wrapper">
                                             <?php foreach ($sermao['midias'] as $midia): ?>
@@ -68,7 +68,7 @@ ob_start();
                                 </a>
                             <?php else: ?>
                                 <!-- Placeholder quando não há imagens -->
-                                <a href="/sermao/<?php echo $sermao['id']; ?>">
+                                <a href="/sermao/<?php echo $sermao['slug']; ?>">
                                     <div
                                         class="w-full h-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center relative">
                                         <i class="fas fa-bible text-white text-4xl"></i>
@@ -91,7 +91,7 @@ ob_start();
 
                         <!-- Content -->
                         <div class="p-6">
-                            <a href="/sermao/<?php echo $sermao['id']; ?>" class="block group/title mb-4">
+                            <a href="/sermao/<?php echo $sermao['slug']; ?>" class="block group/title mb-4">
                                 <h3
                                     class="text-xl font-bold text-gray-900 group-hover/title:text-yellow-600 transition-colors duration-300 line-clamp-2 leading-tight">
                                     <?php echo htmlspecialchars($sermao['titulo']); ?>
@@ -136,7 +136,7 @@ ob_start();
 
                             <!-- Action buttons -->
                             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                                <a href="/sermao/<?php echo $sermao['id']; ?>"
+                                <a href="/sermao/<?php echo $sermao['slug']; ?>"
                                     class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-semibold transition-colors duration-300 group/btn">
                                     <span>Ver mensagem completa</span>
                                     <i

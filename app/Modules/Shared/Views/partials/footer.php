@@ -279,7 +279,7 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
                                 $published = !empty($post['publicado_em']) ?
                                     date("d M, Y", strtotime($post['publicado_em'])) : '';
 
-                                $postUrl = "/blog/" . $post['id'];
+                                $postUrl = "/blog/" . $post['slug'];
                                 $title = htmlspecialchars($post['titulo']);
                                 ?>
                                 <article

@@ -38,9 +38,10 @@ class PublicSermonController extends Controller
         return $enrichedSermons;
     }
 
-    public function show(string $id): void
+    public function show(string $slug): void
     {
-        $sermon = $this->sermonModel->findWithMedia($id);
+        // Usar o novo método que busca por slug com mídias
+        $sermon = $this->sermonModel->findWithMediaBySlug($slug);
 
         if (!$sermon) {
             http_response_code(404);

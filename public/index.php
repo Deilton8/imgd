@@ -127,7 +127,7 @@ function defineEventRoutes(Router $router)
 
     // Público
     $router->get('/eventos', 'Event\\Controllers\\PublicEventController@index');
-    $router->get('/evento/{id}', 'Event\\Controllers\\PublicEventController@show');
+    $router->get('/evento/{slug}', 'Event\\Controllers\\PublicEventController@show');
 }
 
 /**
@@ -146,7 +146,7 @@ function definePublicationRoutes(Router $router)
 
     // Público
     $router->get('/blog', 'Publication\\Controllers\\PublicPublicationController@index');
-    $router->get('/blog/{id}', 'Publication\\Controllers\\PublicPublicationController@show');
+    $router->get('/blog/{slug}', 'Publication\\Controllers\\PublicPublicationController@show');
 }
 
 /**
@@ -165,5 +165,5 @@ function defineSermonRoutes(Router $router)
 
     // Público
     $router->get('/sermoes', 'Sermon\\Controllers\\PublicSermonController@index');
-    $router->get('/sermao/{id}', 'Sermon\\Controllers\\PublicSermonController@show');
+    $router->get('/sermao/{slug}', 'Sermon\\Controllers\\PublicSermonController@show');
 }

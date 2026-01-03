@@ -207,6 +207,39 @@ class Sermon extends Model
         return $sermon;
     }
 
+    // Adicione estes métodos na classe Sermon:
+
+    public function findBySlug(string $slug): ?array
+    {
+        $statement = $this->database->prepare("SELECT * FROM {$this->table} WHERE slug = ?");
+        $statement->execute([$slug]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    public function findWithMediaBySlug(string $slug): ?array
+    {
+        $query = "
+        SELECT s.*, m.id AS midia_id, m.nome_arquivo, m.caminho_arquivo, m.tipo_arquivo, m.tipo_mime
+        FROM {$this->table} s
+        LEFT JOIN midia_sermoes ms ON ms.sermao_id = s.id
+        LEFT JOIN midia m ON m.id = ms.midia_id
+        WHERE s.slug = ?
+    ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$slug]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$rows) {
+            return null;
+        }
+
+        $sermon = $this->buildSermonFromRows($rows);
+        return $sermon;
+    }
+
     private function buildSermonFromRows(array $rows): array
     {
         $firstRow = $rows[0];

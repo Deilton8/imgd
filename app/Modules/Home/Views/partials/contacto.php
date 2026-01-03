@@ -69,13 +69,13 @@
                         <div class="flex items-start gap-4">
                             <div
                                 class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-phone text-yellow-600"></i>
+                                <i class="fas fa-envelope text-yellow-600"></i>
                             </div>
                             <div>
-                                <h4 class="font-bold text-gray-800 mb-2">Contactos</h4>
+                                <h4 class="font-bold text-gray-800 mb-2">Emails</h4>
                                 <div class="space-y-2">
-                                    <p class="text-gray-600">+258 84 000 0000</p>
-                                    <p class="text-gray-600">contato@imgd.org.mz</p>
+                                    <p class="text-gray-600">info@imgd.org.mz</p>
+                                    <p class="text-gray-600">parceiros@imgd.org.mz</p>
                                 </div>
                             </div>
                         </div>

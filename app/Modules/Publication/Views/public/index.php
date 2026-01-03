@@ -49,7 +49,7 @@ ob_start();
                         <!-- Image Slider -->
                         <div class="relative h-64 overflow-hidden">
                             <?php if (!empty($pub['midias'])): ?>
-                                <a href="/blog/<?php echo $pub['id']; ?>">
+                                <a href="/blog/<?php echo $pub['slug']; ?>">
                                     <div class="swiper publication-swiper h-full">
                                         <div class="swiper-wrapper">
                                             <?php foreach ($pub['midias'] as $midia): ?>
@@ -78,7 +78,7 @@ ob_start();
                                 </a>
                             <?php else: ?>
                                 <!-- Placeholder quando não há imagens -->
-                                <a href="/blog/<?php echo $pub['id']; ?>">
+                                <a href="/blog/<?php echo $pub['slug']; ?>">
                                     <div
                                         class="w-full h-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center relative">
                                         <i class="fas fa-newspaper text-white text-4xl"></i>
@@ -102,7 +102,7 @@ ob_start();
 
                         <!-- Content -->
                         <div class="p-6">
-                            <a href="/blog/<?php echo $pub['id']; ?>" class="block group/title mb-4">
+                            <a href="/blog/<?php echo $pub['slug']; ?>" class="block group/title mb-4">
                                 <h3
                                     class="text-xl font-bold text-gray-900 group-hover/title:text-yellow-600 transition-colors duration-300 line-clamp-2 leading-tight">
                                     <?php echo htmlspecialchars($pub['titulo']); ?>
@@ -139,7 +139,7 @@ ob_start();
 
                             <!-- Action buttons -->
                             <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                                <a href="/blog/<?php echo $pub['id']; ?>"
+                                <a href="/blog/<?php echo $pub['slug']; ?>"
                                     class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-semibold transition-colors duration-300 group/btn">
                                     <span>Ver publicação completa</span>
                                     <i

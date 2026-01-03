@@ -10,7 +10,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <?php if (!empty($publicacoes)): ?>
                 <?php foreach ($publicacoes as $pub):
-                    $pubId = $pub['id'];
+                    $pubSlug = $pub['slug'];
                     $pubTitulo = htmlspecialchars($pub['titulo']);
                     $pubConteudo = strip_tags($pub['conteudo']);
                     $pubResumo = strlen($pubConteudo) > 220 ? substr($pubConteudo, 0, 220) . '...' : $pubConteudo;
@@ -28,7 +28,7 @@
                                     <div class="swiper-wrapper">
                                         <?php foreach ($imagens as $index => $midia): ?>
                                             <div class="swiper-slide">
-                                                <a href="/blog/<?= $pubId ?>" class="block relative overflow-hidden">
+                                                <a href="/blog/<?= $pubSlug ?>" class="block relative overflow-hidden">
                                                     <img src="/<?= $midia['caminho_arquivo'] ?>"
                                                         alt="<?= $pubTitulo ?> - Imagem <?= $index + 1 ?>"
                                                         class="w-full h-64 object-contain transition-transform duration-500 group-hover:scale-105"
@@ -55,7 +55,7 @@
                                 </div>
                             <?php else: ?>
                                 <!-- Placeholder Image -->
-                                <a href="/blog/<?= $pubId ?>" class="block relative overflow-hidden">
+                                <a href="/blog/<?= $pubSlug ?>" class="block relative overflow-hidden">
                                     <div
                                         class="w-full h-64 bg-gradient-to-br from-yellow-50 to-yellow-100 flex items-center justify-center">
                                         <div class="text-center text-yellow-600">
@@ -80,7 +80,7 @@
                         <!-- Content Section -->
                         <div class="p-6">
                             <!-- Title -->
-                            <a href="/blog/<?= $pubId ?>"
+                            <a href="/blog/<?= $pubSlug ?>"
                                 class="text-xl font-bold text-gray-900 hover:text-yellow-600 transition-colors duration-200 line-clamp-2 mb-4 block">
                                 <?= $pubTitulo ?>
                             </a>
@@ -109,7 +109,7 @@
 
                             <!-- Read More Button -->
                             <div class="flex items-center justify-between">
-                                <a href="/blog/<?= $pubId ?>"
+                                <a href="/blog/<?= $pubSlug ?>"
                                     class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-semibold text-sm transition-colors duration-200 group">
                                     Ler mais
                                     <i

@@ -10,7 +10,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <?php if (!empty($sermoes)): ?>
                 <?php foreach ($sermoes as $sermao):
-                    $sermaoId = $sermao['id'];
+                    $sermaoSlug = $sermao['slug'];
                     $sermaoTitulo = htmlspecialchars($sermao['titulo']);
                     $sermaoConteudo = strip_tags($sermao['conteudo']);
                     $sermaoResumo = strlen($sermaoConteudo) > 220 ? substr($sermaoConteudo, 0, 220) . '...' : $sermaoConteudo;
@@ -30,7 +30,7 @@
                                     <div class="swiper-wrapper">
                                         <?php foreach ($imagens as $index => $midia): ?>
                                             <div class="swiper-slide">
-                                                <a href="/sermao/<?= $sermaoId ?>" class="block relative overflow-hidden">
+                                                <a href="/sermao/<?= $sermaoSlug ?>" class="slugock relative overflow-hidden">
                                                     <img src="/<?= $midia['caminho_arquivo'] ?>"
                                                         alt="<?= $sermaoTitulo ?> - Imagem <?= $index + 1 ?>"
                                                         class="w-full h-64 object-contain transition-transform duration-500 group-hover:scale-105"
@@ -68,7 +68,7 @@
                                 </div>
                             <?php else: ?>
                                 <!-- Placeholder with Audio Icon -->
-                                <a href="/sermao/<?= $sermaoId ?>" class="block relative overflow-hidden">
+                                <a href="/sermao/<?= $sermaoSlug ?>" class="slugock relative overflow-hidden">
                                     <div
                                         class="w-full h-64 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center relative">
                                         <div class="text-center text-indigo-600">
@@ -120,7 +120,7 @@
                         <!-- Content Section -->
                         <div class="p-6">
                             <!-- Title -->
-                            <a href="/sermao/<?= $sermaoId ?>"
+                            <a href="/sermao/<?= $sermaoSlug ?>" slug
                                 class="text-xl font-bold text-gray-900 hover:text-yellow-600 transition-colors duration-200 line-clamp-2 mb-4 block">
                                 <?= $sermaoTitulo ?>
                             </a>
@@ -149,7 +149,7 @@
 
                             <!-- Action Buttons -->
                             <div class="flex items-center justify-between">
-                                <a href="/sermao/<?= $sermaoId ?>"
+                                <a href="/sermao/<?= $sermaoSlug ?>" slug
                                     class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-semibold text-sm transition-colors duration-200 group/read">
                                     Ver mensagem
                                     <i

@@ -38,9 +38,9 @@ class PublicEventController extends Controller
         return $enrichedEvents;
     }
 
-    public function show(int $id): void
+    public function show(string $slug): void
     {
-        $event = $this->eventModel->findWithMedia($id);
+        $event = $this->eventModel->findWithMediaBySlug($slug);
 
         if (!$event) {
             http_response_code(404);
@@ -48,7 +48,7 @@ class PublicEventController extends Controller
             return;
         }
 
-        $title = $event["titulo"];
+        $title = $event["titulo"] . " - Evento IMGD";
 
         View::render("Event/Views/public/show", [
             "evento" => $event,

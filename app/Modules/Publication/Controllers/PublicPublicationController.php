@@ -38,9 +38,10 @@ class PublicPublicationController extends Controller
         return $enrichedPublications;
     }
 
-    public function show(int $id): void
+    public function show(string $slug): void
     {
-        $publication = $this->publicationModel->findWithMedia($id);
+        // Usar o novo método que busca por slug com mídias
+        $publication = $this->publicationModel->findWithMediaBySlug($slug);
 
         if (!$publication) {
             http_response_code(404);

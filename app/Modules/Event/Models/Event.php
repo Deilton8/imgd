@@ -117,27 +117,6 @@ class Event extends Model
         return (int) $this->database->lastInsertId();
     }
 
-    public function updateRecord(int $id, array $data): bool
-    {
-        $query = "
-            UPDATE {$this->table} 
-            SET titulo=:titulo, descricao=:descricao, local=:local, 
-                data_inicio=:data_inicio, data_fim=:data_fim, status=:status 
-            WHERE id=:id
-        ";
-
-        $statement = $this->database->prepare($query);
-        return $statement->execute([
-            ':titulo' => $data['titulo'],
-            ':descricao' => $data['descricao'],
-            ':local' => $data['local'],
-            ':data_inicio' => $data['data_inicio'],
-            ':data_fim' => $data['data_fim'] ?? null,
-            ':status' => $data['status'],
-            ':id' => $id
-        ]);
-    }
-
     public function deleteRecord(int $id): bool
     {
         $statement = $this->database->prepare("DELETE FROM {$this->table} WHERE id=?");
@@ -199,6 +178,64 @@ class Event extends Model
 
         $event = $this->buildEventFromRows($rows);
         return $event;
+    }
+
+     public function findBySlug(string $slug): ?array
+    {
+        $statement = $this->database->prepare("SELECT * FROM {$this->table} WHERE slug = ?");
+        $statement->execute([$slug]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    public function findWithMediaBySlug(string $slug): ?array
+    {
+        $query = "
+            SELECT e.*, m.id AS midia_id, m.nome_arquivo, m.caminho_arquivo, m.tipo_arquivo, m.tipo_mime
+            FROM {$this->table} e
+            LEFT JOIN midia_eventos me ON me.evento_id = e.id
+            LEFT JOIN midia m ON m.id = me.midia_id
+            WHERE e.slug = ?
+        ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$slug]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$rows) {
+            return null;
+        }
+
+        $event = $this->buildEventFromRows($rows);
+        return $event;
+    }
+
+    public function updateRecord(int $id, array $data): bool
+    {
+        // Gerar slug se o título foi alterado
+        if (isset($data['titulo'])) {
+            $data['slug'] = $this->generateSlug($data['titulo']);
+        }
+
+        $query = "
+            UPDATE {$this->table} 
+            SET titulo=:titulo, descricao=:descricao, local=:local, 
+                data_inicio=:data_inicio, data_fim=:data_fim, status=:status, slug=:slug
+            WHERE id=:id
+        ";
+
+        $statement = $this->database->prepare($query);
+        return $statement->execute([
+            ':titulo' => $data['titulo'],
+            ':descricao' => $data['descricao'],
+            ':local' => $data['local'],
+            ':data_inicio' => $data['data_inicio'],
+            ':data_fim' => $data['data_fim'] ?? null,
+            ':status' => $data['status'],
+            ':slug' => $data['slug'],
+            ':id' => $id
+        ]);
     }
 
     private function buildEventFromRows(array $rows): array

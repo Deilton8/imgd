@@ -185,6 +185,37 @@ class Publication extends Model
         return $publication;
     }
 
+    public function findBySlug(string $slug): ?array
+    {
+        $statement = $this->database->prepare("SELECT * FROM {$this->table} WHERE slug = ?");
+        $statement->execute([$slug]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    public function findWithMediaBySlug(string $slug): ?array
+    {
+        $query = "
+        SELECT p.*, m.id AS midia_id, m.nome_arquivo, m.caminho_arquivo, m.tipo_arquivo, m.tipo_mime
+        FROM {$this->table} p
+        LEFT JOIN midia_publicacoes mp ON mp.publicacao_id = p.id
+        LEFT JOIN midia m ON m.id = mp.midia_id
+        WHERE p.slug = ?
+    ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$slug]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$rows) {
+            return null;
+        }
+
+        $publication = $this->buildPublicationFromRows($rows);
+        return $publication;
+    }
+
     private function generateSlug(string $title, ?int $excludeId = null): string
     {
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
