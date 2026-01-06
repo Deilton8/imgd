@@ -120,7 +120,7 @@ class Sermon extends Model
         return $id;
     }
 
-    public function updateRecord(int $id, array $data): bool
+    public function updateRecord(string $id, array $data): bool
     {
         $data['slug'] = $this->generateSlug($data['titulo']);
 
@@ -144,7 +144,7 @@ class Sermon extends Model
         ]);
     }
 
-    public function deleteRecord(int $id): bool
+    public function deleteRecord(string $id): bool
     {
         $statement = $this->database->prepare("DELETE FROM {$this->table} WHERE id=?");
         return $statement->execute([$id]);
