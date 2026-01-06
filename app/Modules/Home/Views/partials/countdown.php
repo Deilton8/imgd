@@ -64,7 +64,7 @@
 
             <!-- Botão de Ação -->
             <div class="flex-shrink-0">
-                <a href="/evento/<?php echo $proximo_evento['id']; ?>"
+                <a href="/evento/<?php echo $proximo_evento['slug']; ?>"
                     class="inline-flex items-center gap-2 bg-white text-yellow-700 px-6 py-3 rounded-xl font-semibold hover:bg-yellow-50 hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 group/btn">
                     <i class="fas fa-info-circle group-hover/btn:scale-110 transition-transform"></i>
                     Detalhes
