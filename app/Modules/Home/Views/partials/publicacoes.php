@@ -2,8 +2,8 @@
     <div class="container mx-auto px-4">
         <!-- Header Section -->
         <div class="text-center mb-12">
-            <h2 class="title-font text-3xl md:text-4xl font-bold text-yellow-900 mb-4">Publicações Recentes</h2>
-            <div class="w-20 h-1 bg-yellow-600 mx-auto mt-4 rounded-full"></div>
+            <h2 class="title-font text-3xl md:text-4xl font-bold text-yellow-900 mb-8">Publicações Recentes</h2>
+            <div class="w-20 h-1 bg-yellow-600 mx-auto mt-8 rounded-full"></div>
         </div>
 
         <!-- Publications Grid -->
@@ -111,7 +111,7 @@
                             <div class="flex items-center justify-between">
                                 <a href="/blog/<?= $pubSlug ?>"
                                     class="inline-flex items-center text-yellow-600 hover:text-yellow-700 font-semibold text-sm transition-colors duration-200 group">
-                                    Ler mais
+                                    Ver mais detalhes
                                     <i
                                         class="fas fa-arrow-right ml-2 text-xs group-hover:translate-x-1 transition-transform duration-200"></i>
                                 </a>

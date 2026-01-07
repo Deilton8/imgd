@@ -26,7 +26,7 @@
                 <!-- Mobile Menu Button -->
                 <div class="flex">
                     <button @click="mobileMenuOpen = !mobileMenuOpen"
-                        class="relative w-16 h-16 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl flex items-center justify-center transition-all duration-300 group hover:scale-120"
+                        class="relative w-16 h-16 bg-black/30 hover:bg-black/50 rounded-xl flex items-center justify-center transition-all duration-300 group hover:scale-120"
                         :aria-expanded="mobileMenuOpen" aria-controls="sidebar-menu" aria-label="Alternar menu">
                         <i :class="mobileMenuOpen ? 'fas fa-times' : 'fas fa-bars'"
                             class="text-yellow-500 text-lg group-hover:scale-120 transition-transform duration-300"></i>
@@ -65,10 +65,10 @@
                         class="flex items-center space-x-4 p-4 bg-white/5 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-xl group"
                         role="menuitem">
                         <div
-                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/30 transition-colors">
-                            <i class="fas fa-home text-yellow-400"></i>
+                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/50 transition-colors">
+                            <i class="fas fa-home text-yellow-500"></i>
                         </div>
-                        <span class="text-black font-medium group-hover:text-yellow-400 transition-colors">Início</span>
+                        <span class="text-black font-medium group-hover:text-yellow-500 transition-colors">Início</span>
                     </a>
                 </li>
 
@@ -79,11 +79,11 @@
                         :aria-expanded="mobileSobreOpen" aria-controls="mobile-sobre-menu">
                         <div class="flex items-center space-x-4">
                             <div
-                                class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/30 transition-colors">
-                                <i class="fas fa-info-circle text-yellow-400"></i>
+                                class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/50 transition-colors">
+                                <i class="fas fa-info-circle text-yellow-500"></i>
                             </div>
                             <span
-                                class="text-black font-medium group-hover:text-yellow-400 transition-colors">Sobre</span>
+                                class="text-black font-medium group-hover:text-yellow-500 transition-colors">Sobre</span>
                         </div>
                         <i class="fas fa-chevron-down text-sm transition-transform duration-200 text-yellow-500"
                             :class="{'rotate-180': mobileSobreOpen}"></i>
@@ -96,8 +96,8 @@
                             <a href="/declaracao-de-fe"
                                 class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-lg group"
                                 role="menuitem">
-                                <i class="fas fa-cross text-yellow-500/70 text-sm"></i>
-                                <span class="text-black/80 group-hover:text-yellow-400 transition-colors">Declaração de
+                                <i class="fas fa-cross text-yellow-500 text-sm"></i>
+                                <span class="text-black/80 group-hover:text-yellow-500 transition-colors">Declaração de
                                     Fé</span>
                             </a>
                         </li>
@@ -105,16 +105,16 @@
                             <a href="/sobre-imgd"
                                 class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-lg group"
                                 role="menuitem">
-                                <i class="fas fa-church text-yellow-500/70 text-sm"></i>
-                                <span class="text-black/80 group-hover:text-yellow-400 transition-colors">IMGD</span>
+                                <i class="fas fa-church text-yellow-500 text-sm"></i>
+                                <span class="text-black/80 group-hover:text-yellow-500 transition-colors">IMGD</span>
                             </a>
                         </li>
                         <li>
                             <a href="/apostolo-jeque"
                                 class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-lg group"
                                 role="menuitem">
-                                <i class="fas fa-user-circle text-yellow-500/70 text-sm"></i>
-                                <span class="text-black/80 group-hover:text-yellow-400 transition-colors">AP.
+                                <i class="fas fa-user-circle text-yellow-500 text-sm"></i>
+                                <span class="text-black/80 group-hover:text-yellow-500 transition-colors">AP.
                                     Jeque</span>
                             </a>
                         </li>
@@ -122,8 +122,8 @@
                             <a href="/acao-social"
                                 class="flex items-center space-x-3 px-4 py-3 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-lg group"
                                 role="menuitem">
-                                <i class="fas fa-hands-helping text-yellow-500/70 text-sm"></i>
-                                <span class="text-black/80 group-hover:text-yellow-400 transition-colors">Acção
+                                <i class="fas fa-hands-helping text-yellow-500 text-sm"></i>
+                                <span class="text-black/80 group-hover:text-yellow-500 transition-colors">Acção
                                     Social</span>
                             </a>
                         </li>
@@ -136,11 +136,11 @@
                         class="flex items-center space-x-4 p-4 bg-white/5 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-xl group"
                         role="menuitem">
                         <div
-                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/30 transition-colors">
-                            <i class="fas fa-calendar-alt text-yellow-400"></i>
+                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/50 transition-colors">
+                            <i class="fas fa-calendar-alt text-yellow-500"></i>
                         </div>
                         <span
-                            class="text-black font-medium group-hover:text-yellow-400 transition-colors">Eventos</span>
+                            class="text-black font-medium group-hover:text-yellow-500 transition-colors">Eventos</span>
                     </a>
                 </li>
 
@@ -150,11 +150,11 @@
                         class="flex items-center space-x-4 p-4 bg-white/5 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-xl group"
                         role="menuitem">
                         <div
-                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/30 transition-colors">
-                            <i class="fas fa-podcast text-yellow-400"></i>
+                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/50 transition-colors">
+                            <i class="fas fa-podcast text-yellow-500"></i>
                         </div>
                         <span
-                            class="text-black font-medium group-hover:text-yellow-400 transition-colors">Mensagens</span>
+                            class="text-black font-medium group-hover:text-yellow-500 transition-colors">Mensagens</span>
                     </a>
                 </li>
 
@@ -164,11 +164,11 @@
                         class="flex items-center space-x-4 p-4 bg-white/5 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-xl group"
                         role="menuitem">
                         <div
-                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/30 transition-colors">
-                            <i class="fas fa-book text-yellow-400"></i>
+                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/50 transition-colors">
+                            <i class="fas fa-book text-yellow-500"></i>
                         </div>
                         <span
-                            class="text-black font-medium group-hover:text-yellow-400 transition-colors">Publicações</span>
+                            class="text-black font-medium group-hover:text-yellow-500 transition-colors">Publicações</span>
                     </a>
                 </li>
 
@@ -178,11 +178,11 @@
                         class="flex items-center space-x-4 p-4 bg-white/5 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-xl group"
                         role="menuitem">
                         <div
-                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/30 transition-colors">
-                            <i class="fas fa-envelope text-yellow-400"></i>
+                            class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500/50 transition-colors">
+                            <i class="fas fa-envelope text-yellow-500"></i>
                         </div>
                         <span
-                            class="text-black font-medium group-hover:text-yellow-400 transition-colors">Contacto</span>
+                            class="text-black font-medium group-hover:text-yellow-500 transition-colors">Contacto</span>
                     </a>
                 </li>
             </ul>

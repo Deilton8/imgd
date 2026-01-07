@@ -2,8 +2,8 @@
     <div class="container mx-auto px-4">
         <!-- Header Section -->
         <div class="text-center mb-12">
-            <h2 class="text-3xl md:text-4xl font-bold text-yellow-900 mb-4">Mensagens Recentes</h2>
-            <div class="w-20 h-1 bg-yellow-600 mx-auto mt-4 rounded-full"></div>
+            <h2 class="text-3xl md:text-4xl font-bold text-yellow-900 mb-8">Mensagens Recentes</h2>
+            <div class="w-20 h-1 bg-yellow-600 mx-auto mt-8 rounded-full"></div>
         </div>
 
         <!-- Sermons Grid -->
