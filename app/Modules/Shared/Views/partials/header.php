@@ -15,8 +15,7 @@
                     aria-label="Página inicial - IMGD">
                     <!-- Logo para Desktop -->
                     <img src="/assets/img/logo.png" alt="IMGD - Igreja Ministério da Graça de Deus"
-                        class="hidden md:block w-auto h-32 object-cover transition-all duration-300 logo-image"
-                        loading="lazy">
+                        class="hidden md:block w-auto h-32 object-cover transition-all duration-300 logo-image">
 
                     <!-- Logo para Mobile -->
                     <img src="/assets/img/logo.png" alt="IMGD - Igreja Ministério da Graça de Deus"

@@ -6,7 +6,7 @@ ob_start();
 <header class="relative h-screen">
     <div class="w-full h-full">
         <img loading="lazy" src="/assets/img/declaracao-de-fe.png" alt="Comunidade da IMGD em culto"
-            class="w-full h-full object-contain">
+            class="w-full h-full object-cover">
     </div>
 </header>
 
@@ -32,11 +32,14 @@ ob_start();
 <main class="py-16 bg-white">
     <div class="container mx-auto px-4">
         <div class="max-w-4xl mx-auto">
-            <div class="w-24 h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 mx-auto mb-8 rounded-full animate-pulse"></div>
+            <div
+                class="w-24 h-1 bg-gradient-to-r from-yellow-500 to-yellow-600 mx-auto mb-8 rounded-full animate-pulse">
+            </div>
 
             <!-- Crenças Fundamentais -->
             <section aria-labelledby="crencas-heading">
-                <h2 id="crencas-heading" class="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center scroll-reveal">
+                <h2 id="crencas-heading"
+                    class="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center scroll-reveal">
                     Crenças Fundamentais
                 </h2>
 
@@ -53,7 +56,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     A Bíblia Sagrada
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -65,7 +69,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Toda a Escritura é inspirada por Deus e útil para o ensino, para a repreensão,
                                         para a correção e para a instrução na justiça."
                                         <footer class="mt-2 text-sm text-gray-600 not-italic font-semibold">
@@ -89,7 +94,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Deus Triúno
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -101,7 +107,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Portanto, ide, fazei discípulos de todas as nações, batizando-os em nome do
                                         Pai,
                                         e do Filho, e do Espírito Santo."
@@ -126,7 +133,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Jesus Cristo
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -138,7 +146,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "E o anjo, respondendo, disse-lhe: Descerá sobre ti o Espírito Santo, e a
                                         virtude
                                         do Altíssimo te cobrirá com a sua sombra; pelo que também o Santo, que de ti há
@@ -161,11 +170,12 @@ ob_start();
                             <div class="flex-shrink-0">
                                 <div
                                     class="w-14 h-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                    <i class="fas fa-hands-praying"></i>
+                                    <i class="fas fa-praying-hands"></i>
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Salvação pela Graça
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -178,7 +188,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Porque pela graça sois salvos, por meio da fé; e isso não vem de vós, é dom de
                                         Deus."
                                         <footer class="mt-2 text-sm text-gray-600 not-italic font-semibold">
@@ -202,7 +213,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Obra Redentora de Cristo
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -215,7 +227,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Porque primeiramente vos entreguei o que também recebi: que Cristo morreu por
                                         nossos pecados, segundo as Escrituras."
                                         <footer class="mt-2 text-sm text-gray-600 not-italic font-semibold">
@@ -239,7 +252,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Batismo nas Águas
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -251,7 +265,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Portanto, ide, fazei discípulos de todas as nações, batizando-os em nome do
                                         Pai,
                                         e do Filho, e do Espírito Santo."
@@ -276,7 +291,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Batismo no Espírito Santo
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -288,7 +304,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "E todos foram cheios do Espírito Santo, e começaram a falar noutras línguas,
                                         conforme o Espírito Santo lhes concedia que falassem."
                                         <footer class="mt-2 text-sm text-gray-600 not-italic font-semibold">
@@ -312,7 +329,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Dons Espirituais
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -324,7 +342,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Ora, há diversidade de dons, mas o Espírito é o mesmo."
                                         <footer class="mt-2 text-sm text-gray-600 not-italic font-semibold">
                                             — 1 Coríntios 12:4
@@ -347,7 +366,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Santificação
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -359,7 +379,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Mas, como é santo aquele que vos chamou, sede vós também santos em toda a vossa
                                         maneira de viver."
                                         <footer class="mt-2 text-sm text-gray-600 not-italic font-semibold">
@@ -383,7 +404,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Cura Divina
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -395,7 +417,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Verdadeiramente, ele tomou sobre si as nossas enfermidades e as nossas dores
                                         levou sobre si."
                                         <footer class="mt-2 text-sm text-gray-600 not-italic font-semibold">
@@ -419,7 +442,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Segunda Vinda de Cristo
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -431,7 +455,8 @@ ob_start();
                                 <div
                                     class="bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-sm transform transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-md">
                                     <blockquote class="text-gray-700 italic leading-relaxed">
-                                        <i class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                        <i
+                                            class="fas fa-quote-left text-yellow-500 mr-2 opacity-70 group-hover:opacity-100 transition-opacity duration-300"></i>
                                         "Porque o mesmo Senhor descerá do céu com alarido, e com voz de arcanjo, e com a
                                         trombeta de Deus;
                                         e os que morreram em Cristo ressuscitarão primeiro."
@@ -456,7 +481,8 @@ ob_start();
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
+                                <h3
+                                    class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 group-hover:text-yellow-700 transition-colors duration-300">
                                     Juízo Final
                                 </h3>
                                 <div class="text-gray-700 leading-relaxed mb-6 space-y-4">
@@ -481,6 +507,7 @@ ob_start();
             opacity: 0;
             transform: translateY(30px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
@@ -535,9 +562,11 @@ ob_start();
             transform: scale(0.8);
             opacity: 0;
         }
+
         50% {
             transform: scale(1.1);
         }
+
         100% {
             transform: scale(1);
             opacity: 1;
@@ -563,6 +592,7 @@ ob_start();
         from {
             filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.3));
         }
+
         to {
             filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.6));
         }
@@ -570,7 +600,7 @@ ob_start();
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Criar indicador de progresso do scroll
         const progressBar = document.createElement('div');
         progressBar.className = 'scroll-progress';
@@ -604,10 +634,10 @@ ob_start();
                 if (isElementInViewport(element)) {
                     // Adicionar delay baseado no atributo data-delay
                     const delay = element.getAttribute('data-delay') || 0;
-                    
+
                     setTimeout(() => {
                         element.classList.add('revealed');
-                        
+
                         // Adicionar animação extra no ícone
                         const icon = element.querySelector('.fa-book, .fa-cross, .fa-dove, .fa-hands-praying, .fa-water, .fa-fire, .fa-gifts, .fa-hands, .fa-hand-holding-medical, .fa-cloud, .fa-balance-scale');
                         if (icon) {
@@ -633,7 +663,7 @@ ob_start();
             if (!animationTriggered) {
                 animationTriggered = true;
                 revealInitialElements();
-                
+
                 // Adicionar evento de scroll
                 window.addEventListener('scroll', () => {
                     updateScrollProgress();
@@ -652,7 +682,7 @@ ob_start();
         // Adicionar efeito de clique nos artigos
         const articles = document.querySelectorAll('article');
         articles.forEach(article => {
-            article.addEventListener('click', function() {
+            article.addEventListener('click', function () {
                 this.classList.add('ring-2', 'ring-yellow-500');
                 setTimeout(() => {
                     this.classList.remove('ring-2', 'ring-yellow-500');
@@ -667,11 +697,11 @@ ob_start();
 
         // Smooth scroll para elementos quando clicados
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
+            anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 const targetId = this.getAttribute('href');
                 if (targetId === '#') return;
-                
+
                 const targetElement = document.querySelector(targetId);
                 if (targetElement) {
                     window.scrollTo({

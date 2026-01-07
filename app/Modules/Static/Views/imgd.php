@@ -55,24 +55,6 @@ ob_start();
     </div>
 </header>
 
-<!-- Breadcrumb -->
-<nav class="bg-gray-50 py-4 border-b border-gray-200" aria-label="Navegação estrutural">
-    <div class="container mx-auto px-4">
-        <ol class="flex items-center space-x-2 text-sm text-gray-600">
-            <li>
-                <a href="/" class="hover:text-yellow-600 transition-colors duration-200 flex items-center">
-                    <i class="fas fa-home mr-2 text-yellow-500"></i>
-                    Início
-                </a>
-            </li>
-            <li class="flex items-center">
-                <i class="fas fa-chevron-right text-gray-400 text-xs mx-2"></i>
-                <span class="text-gray-900 font-medium" aria-current="page">Sobre a IMGD</span>
-            </li>
-        </ol>
-    </div>
-</nav>
-
 <!-- Main Content -->
 <main class="py-16 bg-white">
     <div class="container mx-auto px-4">
@@ -361,28 +343,119 @@ ob_start();
             </section>
 
             <!-- Localização -->
-            <section aria-labelledby="localizacao-heading">
-                <div class="max-w-6xl mx-auto">
-                    <div class="text-center mb-16">
-                        <h2 id="localizacao-heading" class="text-4xl md:text-5xl font-bold text-yellow-900 mb-4">
-                            Nossa Localização
-                        </h2>
-                        <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-                            Venha nos visitar e fazer parte da nossa família espiritual. Estamos localizados na Avenida
-                            Joaquim Chissano, facilmente acessível de qualquer ponto
-                            da Matola
-                        </p>
-                        <div
-                            class="mx-auto mt-6 w-32 h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent">
+            <section id="localizacao" class="py-20"
+                aria-labelledby="localizacao-heading">
+                <div class="container mx-auto px-4">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="text-center mb-16">
+                            <h2 id="localizacao-heading" class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                                Venha nos Visitar
+                            </h2>
+                            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                                Estamos localizados estrategicamente para melhor atendê-lo
+                            </p>
+                            <div
+                                class="w-32 h-1.5 bg-gradient-to-r from-yellow-400 to-yellow-600 mx-auto mt-6 rounded-full">
+                            </div>
                         </div>
-                    </div>
-                    <div class="rounded-xl overflow-hidden h-96">
-                        <iframe
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3569.706080704633!2d32.46518553243779!3d-25.924982648049895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1ee68fa9b6a8f893%3A0x82df5cea77af3550!2sIgreja%20Minist%C3%A9rio%20Da%20Gra%C3%A7a%20de%20Deus%20(IMGD)!5e0!3m2!1spt-PT!2smz!4v1755854650257!5m2!1spt-PT!2smz"
-                            class="w-full h-full border-0" allowfullscreen loading="lazy"
-                            referrerpolicy="no-referrer-when-downgrade"
-                            title="Localização da Igreja Ministério da Graça de Deus">
-                        </iframe>
+
+                        <div class="grid lg:grid-cols-3 gap-8">
+                            <!-- Informações de Contato -->
+                            <div class="lg:col-span-1 space-y-8">
+                                <div class="bg-white rounded-2xl shadow-lg p-8">
+                                    <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+                                        <i class="fas fa-info-circle text-yellow-500 mr-3"></i>
+                                        Informações
+                                    </h3>
+
+                                    <div class="space-y-6">
+                                        <div class="flex items-start space-x-4">
+                                            <i class="fas fa-map-marker-alt text-yellow-500 text-xl mt-1"></i>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-800 mb-1">Endereço</h4>
+                                                <p class="text-gray-600">
+                                                    Av. Joaquim Chissano, nº 58<br>
+                                                    Bairro da Matola H<br>
+                                                    Matola, Moçambique
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-start space-x-4">
+                                            <i class="fas fa-clock text-yellow-500 text-xl mt-1"></i>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-800 mb-1">Horários de Culto</h4>
+                                                <div class="space-y-2">
+                                                    <div class="flex justify-between">
+                                                        <span class="text-gray-600">Domingo:</span>
+                                                        <span class="font-medium text-gray-800">09:00 - 14:00</span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-gray-600">Quarta-feira:</span>
+                                                        <span class="font-medium text-gray-800">18:00 - 22:00</span>
+                                                    </div>
+                                                    <div class="flex justify-between">
+                                                        <span class="text-gray-600">Sexta-feira:</span>
+                                                        <span class="font-medium text-gray-800">18:00 - 22:00</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-start space-x-4">
+                                            <i class="fas fa-phone-alt text-yellow-500 text-xl mt-1"></i>
+                                            <div>
+                                                <h4 class="font-semibold text-gray-800 mb-1">Contato</h4>
+                                                <p class="text-gray-600">
+                                                    <a href="tel:+258841234567"
+                                                        class="hover:text-yellow-600 transition-colors">
+                                                        +258 84 123 4567
+                                                    </a><br>
+                                                    <a href="mailto:contato@imgd.org"
+                                                        class="hover:text-yellow-600 transition-colors">
+                                                        info@imgd.org
+                                                    </a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-8 pt-8 border-t border-gray-200">
+                                        <h4 class="font-semibold text-gray-800 mb-4">Como Chegar</h4>
+                                        <ul class="space-y-2 text-gray-600">
+                                            <li class="flex items-center">
+                                                <i class="fas fa-car text-yellow-500 mr-3"></i>
+                                                Estacionamento gratuito disponível
+                                            </li>
+                                            <li class="flex items-center">
+                                                <i class="fas fa-wheelchair text-yellow-500 mr-3"></i>
+                                                Acessibilidade completa
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Botão de Navegação -->
+                                <a href="https://maps.google.com/?q=IMGD" target="_blank"
+                                    class="flex items-center justify-center space-x-3 w-full py-4 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                                    <i class="fas fa-directions"></i>
+                                    <span>Obter Direções no Google Maps</span>
+                                </a>
+                            </div>
+
+                            <!-- Mapa -->
+                            <div class="lg:col-span-2">
+                                <div class="rounded-2xl overflow-hidden shadow-2xl h-full min-h-[500px]">
+                                    <iframe
+                                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3569.706080704633!2d32.46518553243779!3d-25.924982648049895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1ee68fa9b6a8f893%3A0x82df5cea77af3550!2sIgreja%20Minist%C3%A9rio%20Da%20Gra%C3%A7a%20de%20Deus%20(IMGD)!5e0!3m2!1spt-PT!2smz!4v1755854650257!5m2!1spt-PT!2smz"
+                                        class="w-full h-full border-0" allowfullscreen loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                        title="Localização da Igreja Ministério da Graça de Deus - Av. Joaquim Chissano, Matola"
+                                        aria-label="Mapa interativo da localização da igreja">
+                                    </iframe>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
