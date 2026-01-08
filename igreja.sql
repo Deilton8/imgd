@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Tempo de geração: 13/11/2025 às 13:55
+-- Host: 127.0.0.1:3307
+-- Tempo de geração: 08/01/2026 às 16:23
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -24,6 +24,22 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Estrutura para tabela `auth_logs`
+--
+
+CREATE TABLE `auth_logs` (
+  `id` int(10) NOT NULL,
+  `usuario_id` int(10) DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `user_agent` text DEFAULT NULL,
+  `tipo` enum('login_success','login_failed','logout','password_reset','token_used') NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estrutura para tabela `eventos`
 --
 
@@ -35,6 +51,7 @@ CREATE TABLE `eventos` (
   `data_inicio` datetime NOT NULL,
   `data_fim` datetime DEFAULT NULL,
   `status` enum('pendente','em_andamento','concluido','cancelado') NOT NULL DEFAULT 'pendente',
+  `slug` varchar(255) NOT NULL,
   `criado_em` datetime DEFAULT current_timestamp(),
   `atualizado_em` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -137,7 +154,7 @@ CREATE TABLE `sermoes` (
   `conteudo` text DEFAULT NULL,
   `pregador` varchar(255) DEFAULT NULL,
   `data` date NOT NULL,
-  `status` enum('rascunho','publicado') NOT NULL DEFAULT 'rascunho',
+  `status` enum('rascunho','publicado','arquivado') NOT NULL DEFAULT 'rascunho',
   `criado_em` timestamp NOT NULL DEFAULT current_timestamp(),
   `atualizado_em` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -155,29 +172,36 @@ CREATE TABLE `usuarios` (
   `senha` varchar(255) NOT NULL,
   `papel` enum('admin','editor') NOT NULL DEFAULT 'editor',
   `status` enum('ativo','inativo') NOT NULL DEFAULT 'ativo',
+  `remember_token` varchar(100) DEFAULT NULL,
+  `remember_expires` datetime DEFAULT NULL,
+  `reset_token` varchar(100) DEFAULT NULL,
+  `reset_expires` datetime DEFAULT NULL,
+  `ultimo_login` datetime DEFAULT NULL,
+  `tentativas_login` int(11) DEFAULT 0,
   `criado_em` datetime DEFAULT current_timestamp(),
-  `atualizado_em` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `reset_token` varchar(255) DEFAULT NULL,
-  `reset_expires` datetime DEFAULT NULL
+  `atualizado_em` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Despejando dados para a tabela `usuarios`
---
-
-INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `papel`, `status`, `criado_em`, `atualizado_em`, `reset_token`, `reset_expires`) VALUES
-(1, 'Deilton', 'deilton@gmail.com', '$2y$10$ArV6Bg6OfXl3iM05A2sZKuOVr62TLtRWTrchlbAEzxESPa6pJkyo2', 'admin', 'ativo', '2025-11-13 09:08:11', '2025-11-13 14:44:19', NULL, NULL),
-(2, 'Matusse', 'matusse@gmail.com', '$2y$10$k3fbOF14ZLOzeG4ANo6KbunJZNexlhkWcxLGDqWy4bfttCBaxHyeK', 'editor', 'ativo', '2025-11-13 09:32:25', '2025-11-13 12:04:44', NULL, NULL);
 
 --
 -- Índices para tabelas despejadas
 --
 
 --
+-- Índices de tabela `auth_logs`
+--
+ALTER TABLE `auth_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `usuario_id` (`usuario_id`),
+  ADD KEY `email` (`email`),
+  ADD KEY `tipo` (`tipo`),
+  ADD KEY `created_at` (`created_at`);
+
+--
 -- Índices de tabela `eventos`
 --
 ALTER TABLE `eventos`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `slug` (`slug`);
 
 --
 -- Índices de tabela `mensagens_contato`
@@ -233,11 +257,19 @@ ALTER TABLE `sermoes`
 --
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `reset_token` (`reset_token`),
+  ADD KEY `remember_token` (`remember_token`);
 
 --
 -- AUTO_INCREMENT para tabelas despejadas
 --
+
+--
+-- AUTO_INCREMENT de tabela `auth_logs`
+--
+ALTER TABLE `auth_logs`
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `eventos`
@@ -285,11 +317,17 @@ ALTER TABLE `publicacoes`
 -- AUTO_INCREMENT de tabela `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restrições para tabelas despejadas
 --
+
+--
+-- Restrições para tabelas `auth_logs`
+--
+ALTER TABLE `auth_logs`
+  ADD CONSTRAINT `auth_logs_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 
 --
 -- Restrições para tabelas `midia_eventos`
