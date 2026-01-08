@@ -37,7 +37,7 @@
     </nav>
 
     <!-- Sidebar Menu -->
-    <div x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-300"
+    <div x-cloak x-show="mobileMenuOpen" x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 transform translate-x-full"
         x-transition:enter-end="opacity-100 transform translate-x-0"
         x-transition:leave="transition ease-in duration-200"
@@ -190,7 +190,7 @@
     </div>
 
     <!-- Overlay for sidebar -->
-    <div x-show="mobileMenuOpen" x-transition.opacity class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
+    <div x-cloak x-show="mobileMenuOpen" x-transition.opacity class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
         @click="mobileMenuOpen = false"></div>
 </header>
 <!-- ================> Header section end here <================== -->
@@ -245,5 +245,10 @@
     /* Prevent body scroll when sidebar is open */
     body:has(#sidebar-menu[x-show="true"]) {
         overflow: hidden;
+    }
+    
+    /* Hide elements with x-cloak until Alpine is loaded */
+    [x-cloak] {
+        display: none !important;
     }
 </style>
