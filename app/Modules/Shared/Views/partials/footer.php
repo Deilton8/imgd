@@ -85,6 +85,21 @@ class RecentPostsLoader
             return null;
         }
 
+        // Garante que midias seja sempre um array
+        if (!isset($postWithMedia['midias']) || !is_array($postWithMedia['midias'])) {
+            $postWithMedia['midias'] = [];
+        }
+
+        // Filtra apenas mídias que são imagens (opcional)
+        $postWithMedia['midias'] = array_filter($postWithMedia['midias'], function ($midia) {
+            $extensoesImagem = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (isset($midia['caminho_arquivo'])) {
+                $extensao = pathinfo($midia['caminho_arquivo'], PATHINFO_EXTENSION);
+                return in_array(strtolower($extensao), $extensoesImagem);
+            }
+            return true;
+        });
+
         return $postWithMedia;
     }
 
@@ -270,17 +285,52 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
                         <?php if (!empty($recentPosts)): ?>
                             <?php foreach ($recentPosts as $post): ?>
                                 <?php
-                                if (!empty($post['midias'][0]['caminho_arquivo'])) {
-                                    $thumbPath = $post['midias'][0]['caminho_arquivo'];
-                                    $thumb = '/' . ltrim($thumbPath, '/');
-                                    $altText = htmlspecialchars($post['midias'][0]['descricao'] ?? $post['titulo']);
+                                // Extrai o URL da imagem de forma segura
+                                $thumb = '/imagens/padrao-sem-imagem.jpg'; // Imagem padrão como fallback
+                                $altText = 'Imagem da publicação';
+
+                                // Verifica se existem mídias e se há caminho do arquivo
+                                if (!empty($post['midias']) && is_array($post['midias'])) {
+                                    // Pega a primeira mídia disponível
+                                    $primeiraMidia = reset($post['midias']);
+
+                                    // Verifica diferentes formatos possíveis do caminho
+                                    if (!empty($primeiraMidia['caminho_arquivo'])) {
+                                        $caminho = $primeiraMidia['caminho_arquivo'];
+                                        $thumb = (strpos($caminho, '/') === 0) ? $caminho : '/' . ltrim($caminho, '/');
+
+                                        // Remove qualquer "public/" do início do caminho se existir
+                                        $thumb = preg_replace('/^public\//', '/', $thumb);
+                                    } elseif (!empty($primeiraMidia['caminho'])) {
+                                        $caminho = $primeiraMidia['caminho'];
+                                        $thumb = (strpos($caminho, '/') === 0) ? $caminho : '/' . ltrim($caminho, '/');
+                                        $thumb = preg_replace('/^public\//', '/', $thumb);
+                                    } elseif (!empty($primeiraMidia['url'])) {
+                                        $thumb = $primeiraMidia['url'];
+                                    }
+
+                                    // Define o texto alternativo
+                                    $altText = htmlspecialchars(
+                                        $primeiraMidia['descricao'] ??
+                                        $primeiraMidia['titulo'] ??
+                                        $post['titulo'] ??
+                                        'Imagem da publicação'
+                                    );
                                 }
 
-                                $published = !empty($post['publicado_em']) ?
-                                    date("d M, Y", strtotime($post['publicado_em'])) : '';
+                                // Formata a data de publicação
+                                $published = '';
+                                if (!empty($post['publicado_em'])) {
+                                    try {
+                                        $published = date("d M, Y", strtotime($post['publicado_em']));
+                                    } catch (Exception $e) {
+                                        // Se houver erro na data, mantém vazio
+                                    }
+                                }
 
-                                $postUrl = "/blog/" . $post['slug'];
-                                $title = htmlspecialchars($post['titulo']);
+                                // Prepara URL e título
+                                $postUrl = "/blog/" . ($post['slug'] ?? 'sem-slug');
+                                $title = htmlspecialchars($post['titulo'] ?? 'Título não disponível');
                                 ?>
                                 <article
                                     class="group flex items-start max-w-md mx-auto lg:mx-0 rounded-xl p-3 transition-all duration-300">
@@ -288,7 +338,8 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
                                         <a href="<?php echo $postUrl; ?>" class="block">
                                             <img src="<?php echo $thumb; ?>" alt="<?php echo $altText; ?>"
                                                 class="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-300 shadow-md"
-                                                loading="lazy">
+                                                loading="lazy"
+                                                onerror="this.src='/imagens/padrao-sem-imagem.jpg'; this.alt='Imagem não carregada';">
                                         </a>
                                     </div>
                                     <div class="flex-1 min-w-0">
