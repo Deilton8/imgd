@@ -1,44 +1,121 @@
 <?php
+
 use App\Modules\Publication\Models\Publication;
 
-// Garante que a variável $recentPosts existe com tratamento de erro robusto
-if (!isset($recentPosts) || !is_array($recentPosts)) {
-    try {
+class RecentPostsLoader
+{
+    private const POSTS_LIMIT = 3;
+
+    private static array $socialLinks = [
+        'facebook' => 'https://web.facebook.com/www.imgdjeque.org.mz',
+        'youtube' => 'https://youtube.com/@imgdvideos',
+        'instagram' => 'https://www.instagram.com/apostolojeque'
+    ];
+
+    /**
+     * Carrega os posts recentes de forma segura
+     */
+    public static function loadRecentPosts(array &$recentPosts): void
+    {
+        if (self::isValidPostsArray($recentPosts)) {
+            return;
+        }
+
+        try {
+            $recentPosts = self::fetchRecentPosts();
+        } catch (Exception $e) {
+            self::logError($e);
+            $recentPosts = [];
+        }
+    }
+
+    /**
+     * Verifica se o array de posts é válido
+     */
+    private static function isValidPostsArray($posts): bool
+    {
+        return isset($posts) && is_array($posts) && !empty($posts);
+    }
+
+    /**
+     * Busca os posts recentes do banco de dados
+     */
+    private static function fetchRecentPosts(): array
+    {
         $publicationModel = new Publication();
-        $allPosts = $publicationModel->all();
+        $allPosts = $publicationModel->getAll();
 
-        // Pega os 3 últimos posts completos com mídias
+        return self::filterAndLimitPosts($allPosts, $publicationModel);
+    }
+
+    /**
+     * Filtra e limita os posts conforme regras de negócio
+     */
+    private static function filterAndLimitPosts(array $allPosts, Publication $model): array
+    {
         $recentPosts = [];
-        $postCount = 0;
 
-        foreach ($allPosts as $p) {
-            if ($postCount >= 3)
+        foreach ($allPosts as $post) {
+            if (count($recentPosts) >= self::POSTS_LIMIT) {
                 break;
+            }
 
-            if (isset($p['id'])) {
-                $postWithMedia = $publicationModel->findWithMedia($p['id']);
-                if ($postWithMedia && !empty($postWithMedia['titulo'])) {
-                    $recentPosts[] = $postWithMedia;
-                    $postCount++;
-                }
+            $postWithMedia = self::getPostWithMedia($post, $model);
+
+            if ($postWithMedia !== null) {
+                $recentPosts[] = $postWithMedia;
             }
         }
-    } catch (Exception $e) {
-        // Log do erro em ambiente de produção
-        error_log("Erro ao carregar posts recentes: " . $e->getMessage());
-        $recentPosts = [];
+
+        return $recentPosts;
+    }
+
+    /**
+     * Obtém um post com mídias se for válido
+     */
+    private static function getPostWithMedia(array $post, Publication $model): ?array
+    {
+        if (!isset($post['id'])) {
+            return null;
+        }
+
+        $postWithMedia = $model->findWithMedia($post['id']);
+
+        if (empty($postWithMedia['titulo'])) {
+            return null;
+        }
+
+        return $postWithMedia;
+    }
+
+    /**
+     * Registra erros de forma segura
+     */
+    private static function logError(Exception $e): void
+    {
+        error_log(sprintf(
+            "Erro ao carregar posts recentes: %s [Arquivo: %s, Linha: %s]",
+            $e->getMessage(),
+            $e->getFile(),
+            $e->getLine()
+        ));
+    }
+
+    /**
+     * Retorna os links de redes sociais
+     */
+    public static function getSocialLinks(): array
+    {
+        return self::$socialLinks;
     }
 }
 
-// URLs das redes sociais (substitua pelas reais)
-$socialLinks = [
-    'facebook' => 'https://web.facebook.com/www.imgdjeque.org.mz',
-    'youtube' => 'https://youtube.com/@imgdvideos',
-    'instagram' => 'https://www.instagram.com/apostolojeque'
-];
+// Uso do código refatorado
+$recentPosts = $recentPosts ?? []; // Inicialização segura
+RecentPostsLoader::loadRecentPosts($recentPosts);
 
-// Caminho padrão para placeholder
-$placeholderImage = '/assets/img/placeholder-100x100.png';
+$socialLinks = RecentPostsLoader::getSocialLinks();
+
 ?>
 
 <!-- ================> Social section start here <================== -->
@@ -56,11 +133,11 @@ $placeholderImage = '/assets/img/placeholder-100x100.png';
             <div class="flex flex-wrap justify-center gap-4">
                 <a href="<?php echo htmlspecialchars($socialLinks['facebook']); ?>" target="_blank"
                     rel="noopener noreferrer"
-                    class="group relative bg-black/5 hover:bg-black/10 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-black/10"
+                    class="group relative bg-blue-600 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-black/10"
                     aria-label="Siga-nos no Facebook">
                     <div class="flex items-center space-x-3">
                         <div
-                            class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            class="w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fab fa-facebook-f text-white text-sm"></i>
                         </div>
                         <span class="font-semibold text-black">Facebook</span>
@@ -69,11 +146,11 @@ $placeholderImage = '/assets/img/placeholder-100x100.png';
 
                 <a href="<?php echo htmlspecialchars($socialLinks['youtube']); ?>" target="_blank"
                     rel="noopener noreferrer"
-                    class="group relative bg-black/5 hover:bg-black/10 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-black/10"
+                    class="group relative bg-red-600 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-black/10"
                     aria-label="Inscreva-se no nosso canal do YouTube">
                     <div class="flex items-center space-x-3">
                         <div
-                            class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            class="w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fab fa-youtube text-white text-sm"></i>
                         </div>
                         <span class="font-semibold text-black">YouTube</span>
@@ -82,11 +159,11 @@ $placeholderImage = '/assets/img/placeholder-100x100.png';
 
                 <a href="<?php echo htmlspecialchars($socialLinks['instagram']); ?>" target="_blank"
                     rel="noopener noreferrer"
-                    class="group relative bg-black/5 hover:bg-black/10 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-black/10"
+                    class="group relative bg-gradient-to-br from-purple-600 to-pink-600 backdrop-blur-sm rounded-xl px-6 py-3 transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-black/10"
                     aria-label="Siga-nos no Instagram">
                     <div class="flex items-center space-x-3">
                         <div
-                            class="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            class="w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fab fa-instagram text-white text-sm"></i>
                         </div>
                         <span class="font-semibold text-black">Instagram</span>
@@ -175,11 +252,11 @@ $placeholderImage = '/assets/img/placeholder-100x100.png';
                                 </a>
                             </li>
                             <li>
-                                <a href="/contacto"
+                                <a href="/contato"
                                     class="group flex items-center text-gray-300 hover:text-yellow-400 transition-all duration-300 py-2">
                                     <i
                                         class="fas fa-chevron-right text-yellow-500 text-xs mr-3 group-hover:translate-x-1 transition-transform"></i>
-                                    <span>Contacto</span>
+                                    <span>Contato</span>
                                 </a>
                             </li>
                         </ul>
@@ -193,10 +270,6 @@ $placeholderImage = '/assets/img/placeholder-100x100.png';
                         <?php if (!empty($recentPosts)): ?>
                             <?php foreach ($recentPosts as $post): ?>
                                 <?php
-                                // Thumbnail: primeira mídia imagem ou placeholder
-                                $thumb = $placeholderImage;
-                                $altText = "Thumbnail para " . htmlspecialchars($post['titulo']);
-
                                 if (!empty($post['midias'][0]['caminho_arquivo'])) {
                                     $thumbPath = $post['midias'][0]['caminho_arquivo'];
                                     $thumb = '/' . ltrim($thumbPath, '/');
@@ -206,7 +279,7 @@ $placeholderImage = '/assets/img/placeholder-100x100.png';
                                 $published = !empty($post['publicado_em']) ?
                                     date("d M, Y", strtotime($post['publicado_em'])) : '';
 
-                                $postUrl = "/publicacao/" . $post['id'];
+                                $postUrl = "/blog/" . $post['slug'];
                                 $title = htmlspecialchars($post['titulo']);
                                 ?>
                                 <article
@@ -214,7 +287,7 @@ $placeholderImage = '/assets/img/placeholder-100x100.png';
                                     <div class="flex-shrink-0 w-14 h-14 mr-4">
                                         <a href="<?php echo $postUrl; ?>" class="block">
                                             <img src="<?php echo $thumb; ?>" alt="<?php echo $altText; ?>"
-                                                class="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300 shadow-md"
+                                                class="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-300 shadow-md"
                                                 loading="lazy">
                                         </a>
                                     </div>
@@ -270,7 +343,7 @@ $placeholderImage = '/assets/img/placeholder-100x100.png';
 
                 <!-- Botão Admin - Estilo Melhorado -->
                 <a href="/admin"
-                    class="group inline-flex items-center bg-gray-100 hover:bg-yellow-600 text-gray-600 hover:text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-200 hover:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 opacity-10 hover:opacity-100"
+                    class="group inline-flex items-center bg-gray-100 hover:bg-yellow-600 text-gray-600 hover:text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-110 hover:shadow-lg border border-gray-200 hover:border-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 opacity-10 hover:opacity-100"
                     aria-label="Acessar painel administrativo" target="_blank" rel="noopener noreferrer">
                     <i class="fas fa-user-shield text-sm group-hover:scale-110 transition-transform"></i>
                 </a>

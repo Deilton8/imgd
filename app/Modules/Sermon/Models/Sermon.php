@@ -6,88 +6,108 @@ use PDO;
 
 class Sermon extends Model
 {
-    protected $table = "sermoes";
+    protected string $table = "sermoes";
+    private const ID_PREFIX = 'SERM_';
+    private const ID_LENGTH = 8;
+    private const MAX_ID_GENERATION_ATTEMPTS = 10;
 
-    public function all()
+    public function getAll(): array
     {
-        $stmt = $this->db->query("SELECT * FROM {$this->table} ORDER BY data DESC");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $statement = $this->database->query("SELECT * FROM {$this->table} ORDER BY data DESC");
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function find($id)
+    public function findatabaseyId(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $statement = $this->database->prepare("SELECT * FROM {$this->table} WHERE id = ?");
+        $statement->execute([$id]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
     }
 
-    /** Paginação + busca + filtros */
-    public function list($page = 1, $perPage = 10, $filters = [])
+    public function getPaginatedList(int $page = 1, int $perPage = 10, array $filters = []): array
     {
         $offset = ($page - 1) * $perPage;
-        $where = "WHERE id IS NOT NULL";
-        $params = [];
+        $whereClause = "WHERE id IS NOT NULL";
+        $parameters = [];
 
-        // 🔍 Filtros opcionais
-        if (!empty($filters['search'])) {
-            $where .= " AND (titulo LIKE :search OR conteudo LIKE :search OR pregador LIKE :search)";
-            $params[':search'] = "%{$filters['search']}%";
-        }
+        $whereClause = $this->applyFilters($whereClause, $parameters, $filters);
 
-        if (!empty($filters['pregador'])) {
-            $where .= " AND pregador LIKE :pregador";
-            $params[':pregador'] = "%{$filters['pregador']}%";
-        }
-
-        if (!empty($filters['status'])) {
-            $where .= " AND status = :status";
-            $params[':status'] = $filters['status'];
-        }
-
-        if (!empty($filters['data_inicio'])) {
-            $where .= " AND data >= :data_inicio";
-            $params[':data_inicio'] = $filters['data_inicio'];
-        }
-
-        if (!empty($filters['data_fim'])) {
-            $where .= " AND data <= :data_fim";
-            $params[':data_fim'] = $filters['data_fim'];
-        }
-
-        $sql = "
+        $query = "
             SELECT * FROM {$this->table}
-            $where ORDER BY data DESC
-            LIMIT $perPage OFFSET $offset
+            {$whereClause} ORDER BY data DESC
+            LIMIT {$perPage} OFFSET {$offset}
         ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $sermoes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $statement = $this->database->prepare($query);
+        $statement->execute($parameters);
+        $sermons = $statement->fetchAll(PDO::FETCH_ASSOC);
 
-        // Pegar total
-        $countStmt = $this->db->prepare("SELECT COUNT(*) FROM {$this->table} $where");
-        $countStmt->execute($params);
-        $total = $countStmt->fetchColumn();
+        $total = $this->getTotalRecords($whereClause, $parameters);
+        $totalPages = ceil($total / $perPage);
 
         return [
-            "data" => $sermoes,
+            "data" => $sermons,
             "total" => $total,
             "page" => $page,
             "perPage" => $perPage,
-            "pages" => ceil($total / $perPage)
+            "pages" => $totalPages
         ];
     }
 
-    public function create($data)
+    private function applyFilters(string $whereClause, array &$parameters, array $filters): string
+    {
+        if (!empty($filters['search'])) {
+            $whereClause .= " AND (titulo LIKE :search OR conteudo LIKE :search OR pregador LIKE :search)";
+            $parameters[':search'] = "%{$filters['search']}%";
+        }
+
+        if (!empty($filters['pregador'])) {
+            $whereClause .= " AND pregador LIKE :pregador";
+            $parameters[':pregador'] = "%{$filters['pregador']}%";
+        }
+
+        if (!empty($filters['status'])) {
+            $whereClause .= " AND status = :status";
+            $parameters[':status'] = $filters['status'];
+        }
+
+        if (!empty($filters['data_inicio'])) {
+            $whereClause .= " AND data >= :data_inicio";
+            $parameters[':data_inicio'] = $filters['data_inicio'];
+        }
+
+        if (!empty($filters['data_fim'])) {
+            $whereClause .= " AND data <= :data_fim";
+            $parameters[':data_fim'] = $filters['data_fim'];
+        }
+
+        return $whereClause;
+    }
+
+    private function getTotalRecords(string $whereClause, array $parameters): int
+    {
+        $countQuery = "SELECT COUNT(*) FROM {$this->table} {$whereClause}";
+        $countStatement = $this->database->prepare($countQuery);
+        $countStatement->execute($parameters);
+
+        return (int) $countStatement->fetchColumn();
+    }
+
+    public function createRecord(array $data): string
     {
         $id = $this->generateUniqueId();
         $data['slug'] = $this->generateSlug($data['titulo']);
 
-        $stmt = $this->db->prepare("INSERT INTO {$this->table} 
+        $query = "
+            INSERT INTO {$this->table} 
             (id, titulo, slug, conteudo, pregador, data, status) 
-            VALUES (:id, :titulo, :slug, :conteudo, :pregador, :data, :status)");
+            VALUES (:id, :titulo, :slug, :conteudo, :pregador, :data, :status)
+        ";
 
-        $stmt->execute([
+        $statement = $this->database->prepare($query);
+        $statement->execute([
             ':id' => $id,
             ':titulo' => $data['titulo'],
             ':slug' => $data['slug'],
@@ -100,16 +120,20 @@ class Sermon extends Model
         return $id;
     }
 
-    public function update($id, $data)
+    public function updateRecord(string $id, array $data): bool
     {
         $data['slug'] = $this->generateSlug($data['titulo']);
 
-        $stmt = $this->db->prepare("UPDATE {$this->table} SET 
+        $query = "
+            UPDATE {$this->table} SET 
             titulo=:titulo, slug=:slug, conteudo=:conteudo, pregador=:pregador, 
             data=:data, status=:status
-            WHERE id=:id");
+            WHERE id=:id
+        ";
 
-        return $stmt->execute([
+        $statement = $this->database->prepare($query);
+
+        return $statement->execute([
             ':titulo' => $data['titulo'],
             ':slug' => $data['slug'],
             ':conteudo' => $data['conteudo'] ?? null,
@@ -120,73 +144,121 @@ class Sermon extends Model
         ]);
     }
 
-    public function delete($id)
+    public function deleteRecord(string $id): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id=?");
-        return $stmt->execute([$id]);
+        $statement = $this->database->prepare("DELETE FROM {$this->table} WHERE id=?");
+        return $statement->execute([$id]);
     }
 
-    // 🔗 Relacionar mídias
-    public function attachMedia($sermaoId, $mediaIds = [])
+    public function attachMedia(string $sermonId, array $mediaIds): void
     {
-        $stmt = $this->db->prepare("INSERT IGNORE INTO midia_sermoes (midia_id, sermao_id) VALUES (:midia_id, :sermao_id)");
-        foreach ($mediaIds as $midiaId) {
-            $stmt->execute([
-                ':midia_id' => $midiaId,
-                ':sermao_id' => $sermaoId
+        $query = "INSERT IGNORE INTO midia_sermoes (midia_id, sermao_id) VALUES (:midia_id, :sermao_id)";
+        $statement = $this->database->prepare($query);
+
+        foreach ($mediaIds as $mediaId) {
+            $statement->execute([
+                ':midia_id' => $mediaId,
+                ':sermao_id' => $sermonId
             ]);
         }
     }
 
-    public function getMedia($sermaoId)
+    public function getAttachedMedia(string $sermonId): array
     {
-        $stmt = $this->db->prepare("
+        $query = "
             SELECT m.* 
             FROM midia_sermoes ms
             JOIN midia m ON ms.midia_id = m.id
             WHERE ms.sermao_id = ?
-        ");
-        $stmt->execute([$sermaoId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$sermonId]);
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function detachMedia($sermaoId, $midiaId)
+    public function detachMedia(string $sermonId, int $mediaId): bool
     {
-        $stmt = $this->db->prepare("DELETE FROM midia_sermoes WHERE sermao_id=? AND midia_id=?");
-        return $stmt->execute([$sermaoId, $midiaId]);
+        $query = "DELETE FROM midia_sermoes WHERE sermao_id=? AND midia_id=?";
+        $statement = $this->database->prepare($query);
+        return $statement->execute([$sermonId, $mediaId]);
     }
 
-    public function findWithMedia($id)
+    public function findWithMedia(string $id): ?array
     {
-        $stmt = $this->db->prepare("
+        $query = "
             SELECT s.*, m.id AS midia_id, m.nome_arquivo, m.caminho_arquivo, m.tipo_arquivo, m.tipo_mime
             FROM {$this->table} s
             LEFT JOIN midia_sermoes ms ON ms.sermao_id = s.id
             LEFT JOIN midia m ON m.id = ms.midia_id
             WHERE s.id = ?
-        ");
-        $stmt->execute([$id]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        ";
 
-        if (!$rows)
+        $statement = $this->database->prepare($query);
+        $statement->execute([$id]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$rows) {
             return null;
+        }
 
-        $sermao = [
-            "id" => $rows[0]['id'],
-            "titulo" => $rows[0]['titulo'],
-            "slug" => $rows[0]['slug'],
-            "conteudo" => $rows[0]['conteudo'],
-            "pregador" => $rows[0]['pregador'],
-            "data" => $rows[0]['data'],
-            "status" => $rows[0]['status'],
-            "criado_em" => $rows[0]['criado_em'],
-            "atualizado_em" => $rows[0]['atualizado_em'],
+        $sermon = $this->buildSermonFromRows($rows);
+        return $sermon;
+    }
+
+    // Adicione estes métodos na classe Sermon:
+
+    public function findBySlug(string $slug): ?array
+    {
+        $statement = $this->database->prepare("SELECT * FROM {$this->table} WHERE slug = ?");
+        $statement->execute([$slug]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    public function findWithMediaBySlug(string $slug): ?array
+    {
+        $query = "
+        SELECT s.*, m.id AS midia_id, m.nome_arquivo, m.caminho_arquivo, m.tipo_arquivo, m.tipo_mime
+        FROM {$this->table} s
+        LEFT JOIN midia_sermoes ms ON ms.sermao_id = s.id
+        LEFT JOIN midia m ON m.id = ms.midia_id
+        WHERE s.slug = ?
+    ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$slug]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$rows) {
+            return null;
+        }
+
+        $sermon = $this->buildSermonFromRows($rows);
+        return $sermon;
+    }
+
+    private function buildSermonFromRows(array $rows): array
+    {
+        $firstRow = $rows[0];
+        $sermon = [
+            "id" => $firstRow['id'],
+            "titulo" => $firstRow['titulo'],
+            "slug" => $firstRow['slug'],
+            "conteudo" => $firstRow['conteudo'],
+            "pregador" => $firstRow['pregador'],
+            "data" => $firstRow['data'],
+            "status" => $firstRow['status'],
+            "criado_em" => $firstRow['criado_em'],
+            "atualizado_em" => $firstRow['atualizado_em'],
             "midias" => []
         ];
 
         foreach ($rows as $row) {
             if (!empty($row['midia_id'])) {
-                $sermao['midias'][] = [
+                $sermon['midias'][] = [
                     "id" => $row['midia_id'],
                     "nome_arquivo" => $row['nome_arquivo'],
                     "caminho_arquivo" => $row['caminho_arquivo'],
@@ -196,96 +268,81 @@ class Sermon extends Model
             }
         }
 
-        return $sermao;
+        return $sermon;
     }
 
-    /** 
-     * Gera um ID único e aleatório
-     * Formato: SERM_XXXXXXXX (8 caracteres alfanuméricos)
-     */
-    public function generateUniqueId()
+    public function generateUniqueId(): string
     {
-        $prefix = 'SERM_';
-        $length = 8;
-        $maxAttempts = 10;
+        $prefix = self::ID_PREFIX;
         $attempt = 0;
 
         do {
-            // Gera uma string aleatória com letras e números
-            $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            $randomString = '';
-
-            for ($i = 0; $i < $length; $i++) {
-                $randomString .= $characters[rand(0, strlen($characters) - 1)];
-            }
-
+            $randomString = $this->generateRandomString(self::ID_LENGTH);
             $id = $prefix . $randomString;
             $attempt++;
 
-            // Verifica se o ID já existe
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM {$this->table} WHERE id = ?");
-            $stmt->execute([$id]);
-            $exists = $stmt->fetchColumn();
+            $exists = $this->checkIfIdExists($id);
+        } while ($exists && $attempt < self::MAX_ID_GENERATION_ATTEMPTS);
 
-        } while ($exists > 0 && $attempt < $maxAttempts);
-
-        // Se após várias tentativas ainda houver conflito, usa um timestamp
-        if ($exists > 0) {
-            $timestamp = substr(str_replace('.', '', microtime(true)), -8);
-            $id = $prefix . $timestamp;
+        if ($exists) {
+            $id = $this->generateFallbackId();
         }
 
         return $id;
     }
 
-    /** 
-     * Alternativa: Gera ID baseado em timestamp com prefixo
-     * Formato: SERM_TIMESTAMP_HEX
-     */
-    public function generateTimestampId()
+    private function generateRandomString(int $length): string
     {
-        $prefix = 'SERM_';
-        $timestamp = dechex(intval(microtime(true) * 1000)); // Timestamp em hexadecimal
-        $random = dechex(rand(0, 65535)); // Número aleatório em hexadecimal
+        $characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $randomString = '';
 
-        return $prefix . $timestamp . '_' . $random;
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, strlen($characters) - 1)];
+        }
+
+        return $randomString;
     }
 
-    /** 
-     * Alternativa: Gera ID UUID-like simplificado
-     * Formato: SERM_XXXX-XXXX-XXXX
-     */
-    public function generateUuidLikeId()
+    private function checkIfIdExists(string $id): bool
     {
-        $prefix = 'SERM_';
+        $query = "SELECT COUNT(*) FROM {$this->table} WHERE id = ?";
+        $statement = $this->database->prepare($query);
+        $statement->execute([$id]);
 
-        $part1 = substr(strtoupper(uniqid()), -4);
-        $part2 = substr(strtoupper(uniqid('', true)), -4);
-        $part3 = substr(strtoupper(uniqid('', true)), -4);
-
-        return $prefix . $part1 . '-' . $part2 . '-' . $part3;
+        return $statement->fetchColumn() > 0;
     }
 
-    /** Slug auto */
-    public function generateSlug($titulo)
+    private function generateFallbackId(): string
     {
-        $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $titulo), '-'));
+        $timestamp = substr(str_replace('.', '', microtime(true)), -8);
+        return self::ID_PREFIX . $timestamp;
+    }
 
-        // garantir slug único
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM {$this->table} WHERE slug = ?");
-        $stmt->execute([$slug]);
+    public function generateSlug(string $title): string
+    {
+        $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $title), '-'));
 
-        if ($stmt->fetchColumn() > 0) {
+        if ($this->slugExists($slug)) {
             $slug .= "-" . uniqid();
         }
 
         return $slug;
     }
 
-    /** Obter pregadores únicos */
-    public function getPregadores()
+    private function slugExists(string $slug): bool
     {
-        $stmt = $this->db->query("SELECT DISTINCT pregador FROM {$this->table} WHERE pregador IS NOT NULL ORDER BY pregador");
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $query = "SELECT COUNT(*) FROM {$this->table} WHERE slug = ?";
+        $statement = $this->database->prepare($query);
+        $statement->execute([$slug]);
+
+        return $statement->fetchColumn() > 0;
+    }
+
+    public function getPreachers(): array
+    {
+        $query = "SELECT DISTINCT pregador FROM {$this->table} WHERE pregador IS NOT NULL ORDER BY pregador";
+        $statement = $this->database->query($query);
+
+        return $statement->fetchAll(PDO::FETCH_COLUMN);
     }
 }

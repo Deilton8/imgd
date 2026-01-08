@@ -2,302 +2,575 @@
 ob_start();
 ?>
 
-<div class="max-w-4xl mx-auto mt-6 mb-10 px-4 sm:px-6">
-    <!-- Card principal -->
-    <div
-        class="bg-white shadow-2xl rounded-2xl p-6 sm:p-8 border border-gray-200 relative overflow-hidden transition-all duration-300 hover:shadow-xl">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 py-8 px-4 sm:px-6 lg:px-8" x-data="eventView()"
+    x-cloak>
+    <div class="max-w-6xl mx-auto">
 
-        <!-- Elementos decorativos -->
-        <div
-            class="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full -mr-20 -mt-20">
-        </div>
-        <div
-            class="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-amber-50 to-yellow-100 rounded-full -ml-16 -mb-16">
-        </div>
-
-        <!-- Cabeçalho do evento -->
-        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 relative z-10 mb-8">
-            <div class="flex-1 text-center sm:text-left">
-                <div class="inline-flex items-center gap-2 mb-2">
-                    <span
-                        class="text-sm font-medium px-3 py-1 rounded-full 
-                        <?= $evento['status'] === 'concluido' ? 'bg-green-100 text-green-800 border border-green-200' :
-                            ($evento['status'] === 'em_andamento' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
-                                ($evento['status'] === 'pendente' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 'bg-red-100 text-red-800 border border-red-200')) ?>">
-                        <?= ucfirst(str_replace('_', ' ', $evento['status'])) ?>
-                    </span>
-                    <span class="text-sm text-gray-500">ID: <?= $evento['id'] ?></span>
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-6">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="w-14 h-14 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <h1 class="text-3xl font-bold text-gray-900">Detalhes do Evento</h1>
+                            <span
+                                class="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+                                ID: <?= $evento['id'] ?>
+                            </span>
+                        </div>
+                        <p class="text-gray-600">Visualize todas as informações do evento</p>
+                    </div>
                 </div>
 
-                <h1 class="text-3xl font-bold text-gray-900 mb-3">
-                    <?= htmlspecialchars($evento['titulo']) ?>
-                </h1>
-
-                <?php if (!empty($evento['descricao'])): ?>
-                    <p class="text-lg text-gray-600 leading-relaxed">
-                        <?= htmlspecialchars($evento['descricao']) ?>
-                    </p>
-                <?php endif; ?>
+                <div class="flex items-center gap-3">
+                    <a href="/admin/eventos"
+                        class="group inline-flex items-center gap-2 px-5 py-3 bg-white border border-gray-300 rounded-xl hover:border-gray-400 hover:shadow-lg transition-all duration-300 font-medium text-gray-700">
+                        <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Voltar à Lista
+                    </a>
+                </div>
             </div>
-        </div>
 
-        <!-- Grid de informações -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
-            <!-- Informações principais -->
-            <div class="space-y-6">
-                <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-                        Informações do Evento
-                    </h3>
-
-                    <div class="space-y-4">
-                        <div class="flex items-start gap-3">
-                            <span
-                                class="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                                📍
-                            </span>
-                            <div>
-                                <p class="font-medium text-gray-700">Local</p>
-                                <p class="text-gray-900"><?= htmlspecialchars($evento['local']) ?></p>
-                            </div>
+            <!-- Status Banner -->
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-200">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div :class="getStatusClasses('<?= $evento['status'] ?>')"
+                            class="px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full"
+                                :class="getStatusDotClass('<?= $evento['status'] ?>')"></span>
+                            <span x-text="getStatusText('<?= $evento['status'] ?>')"></span>
                         </div>
 
-                        <div class="flex items-start gap-3">
-                            <span
-                                class="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                                🗓️
-                            </span>
-                            <div>
-                                <p class="font-medium text-gray-700">Data e Horário</p>
-                                <p class="text-gray-900">
-                                    <?= date('d/m/Y', strtotime($evento['data_inicio'])) ?>
-                                    até
-                                    <?= date('d/m/Y', strtotime($evento['data_fim'])) ?>
-                                </p>
-                            </div>
+                        <div class="text-sm text-gray-600">
+                            <span class="font-medium"><?= htmlspecialchars($evento['titulo']) ?></span>
                         </div>
+                    </div>
 
-                        <?php if (!empty($evento['categoria'])): ?>
-                            <div class="flex items-start gap-3">
-                                <span
-                                    class="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    🏷️
-                                </span>
-                                <div>
-                                    <p class="font-medium text-gray-700">Categoria</p>
-                                    <p class="text-gray-900"><?= htmlspecialchars($evento['categoria']) ?></p>
-                                </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-sm text-gray-500">
+                            Criado em: <?= date('d/m/Y H:i', strtotime($evento['criado_em'])) ?>
+                        </div>
+                        <?php if (!empty($evento['atualizado_em'])): ?>
+                            <div class="text-sm text-gray-500">
+                                Atualizado: <?= date('d/m/Y H:i', strtotime($evento['atualizado_em'])) ?>
                             </div>
                         <?php endif; ?>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Informações adicionais -->
-            <div class="space-y-6">
-                <?php if (!empty($evento['observacoes'])): ?>
-                    <div class="bg-amber-50 rounded-xl p-6 border border-amber-200">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                            <span class="w-2 h-2 bg-amber-500 rounded-full"></span>
-                            Observações
-                        </h3>
-                        <p class="text-gray-700 leading-relaxed"><?= nl2br(htmlspecialchars($evento['observacoes'])) ?></p>
+        <!-- Grid Principal -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Coluna 1: Informações do Evento -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Card de Detalhes -->
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">Informações do Evento</h2>
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Título -->
+                        <div class="mb-6">
+                            <h3 class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Título
+                            </h3>
+                            <p class="text-gray-700 text-lg"><?= htmlspecialchars($evento['titulo']) ?></p>
+                        </div>
+
+                        <!-- Descrição -->
+                        <?php if (!empty($evento['descricao'])): ?>
+                            <div class="mb-6">
+                                <h3 class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                    </svg>
+                                    Descrição
+                                </h3>
+                                <p class="text-gray-700 whitespace-pre-line"><?= htmlspecialchars($evento['descricao']) ?>
+                                </p>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Local e Datas -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Local -->
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Local
+                                </h3>
+                                <p class="text-gray-700"><?= htmlspecialchars($evento['local']) ?></p>
+                            </div>
+
+                            <!-- Datas -->
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    Datas
+                                </h3>
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm text-gray-600">Início:</span>
+                                        <span class="font-medium text-gray-800">
+                                            <?= date('d/m/Y H:i', strtotime($evento['data_inicio'])) ?>
+                                        </span>
+                                    </div>
+                                    <?php if ($evento['data_fim']): ?>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-gray-600">Término:</span>
+                                            <span class="font-medium text-gray-800">
+                                                <?= date('d/m/Y H:i', strtotime($evento['data_fim'])) ?>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mídias -->
+                <?php if (!empty($evento['midias'])): ?>
+                    <div x-data="mediaGallery(<?= htmlspecialchars(json_encode($evento['midias'])) ?>)"
+                        class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                        <div class="bg-gradient-to-r from-purple-600 to-pink-700 px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-xl font-bold text-white">Mídias do Evento</h2>
+                                <span class="text-sm text-white/80" x-text="`${midias.length} arquivos`"></span>
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            <!-- Grid de mídias -->
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <template x-for="(media, index) in midias" :key="media.id">
+                                    <button @click="openGallery(index)"
+                                        class="group relative bg-white rounded-xl border border-gray-200 p-3 hover:border-purple-400 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                                        :title="media.nome_arquivo">
+
+                                        <!-- Ícone de tipo -->
+                                        <div
+                                            class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg p-1.5 shadow-sm z-10">
+                                            <span class="text-xs">
+                                                <template x-if="media.tipo_arquivo === 'imagem'">🖼️</template>
+                                                <template x-if="media.tipo_arquivo === 'video'">🎬</template>
+                                                <template x-if="media.tipo_arquivo === 'audio'">🎵</template>
+                                                <template
+                                                    x-if="!['imagem','video','audio'].includes(media.tipo_arquivo)">📄</template>
+                                            </span>
+                                        </div>
+
+                                        <!-- Preview -->
+                                        <div
+                                            class="aspect-square rounded-lg overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 mb-2 relative">
+                                            <template x-if="media.tipo_arquivo === 'imagem'">
+                                                <img :src="'/' + media.caminho_arquivo" :alt="media.nome_arquivo"
+                                                    class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300">
+                                            </template>
+                                            <template x-if="media.tipo_arquivo === 'video'">
+                                                <video :src="'/' + media.caminho_arquivo"
+                                                    class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                                                    autoplay muted></video>
+                                            </template>
+                                            <template x-if="media.tipo_arquivo === 'audio'">
+                                                <div
+                                                    class="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-50 to-yellow-50">
+                                                    <svg class="w-8 h-8 text-amber-400" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                                    </svg>
+                                                </div>
+                                            </template>
+                                            <template x-if="!['imagem','video','audio'].includes(media.tipo_arquivo)">
+                                                <div
+                                                    class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200">
+                                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <!-- Nome do arquivo -->
+                                        <p class="text-xs font-medium text-gray-800 truncate text-center group-hover:text-purple-600 transition-colors"
+                                            x-text="media.nome_arquivo"></p>
+                                    </button>
+                                </template>
+                            </div>
+
+                            <!-- Contador de tipos -->
+                            <div class="mt-6 pt-6 border-t border-gray-200">
+                                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
+                                        <span x-text="midias.filter(m => m.tipo_arquivo === 'imagem').length"></span>
+                                        imagens
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 bg-purple-500 rounded-full"></span>
+                                        <span x-text="midias.filter(m => m.tipo_arquivo === 'video').length"></span> vídeos
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 bg-amber-500 rounded-full"></span>
+                                        <span x-text="midias.filter(m => m.tipo_arquivo === 'audio').length"></span> áudios
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-3 h-3 bg-gray-500 rounded-full"></span>
+                                        <span
+                                            x-text="midias.filter(m => !['imagem','video','audio'].includes(m.tipo_arquivo)).length"></span>
+                                        outros
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal de Visualização de Mídias -->
+                        <div x-show="isOpen" x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0"
+                            class="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
+                            style="display: none;" @click.self="closeGallery()" @keydown.escape="closeGallery()">
+
+                            <div class="relative max-w-6xl w-full max-h-[90vh]">
+                                <button @click="closeGallery()"
+                                    class="absolute -top-12 right-0 bg-white text-gray-800 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors z-50 focus:outline-none focus:ring-2 focus:ring-white"
+                                    aria-label="Fechar visualizador">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+
+                                <!-- Navegação -->
+                                <button x-show="midias.length > 1" @click="previous()"
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center backdrop-blur-sm transition-colors z-50 focus:outline-none focus:ring-2 focus:ring-white"
+                                    aria-label="Mídia anterior">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+
+                                <button x-show="midias.length > 1" @click="next()"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full w-12 h-12 flex items-center justify-center backdrop-blur-sm transition-colors z-50 focus:outline-none focus:ring-2 focus:ring-white"
+                                    aria-label="Próxima mídia">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+
+                                <!-- Conteúdo da mídia atual -->
+                                <div class="flex flex-col items-center justify-center h-full">
+                                    <div class="text-center mb-6">
+                                        <h3 class="text-xl font-bold text-white" x-text="currentMedia.nome_arquivo"></h3>
+                                        <p class="text-gray-300" x-text="currentMedia.tipo_arquivo"></p>
+                                    </div>
+
+                                    <div class="relative w-full max-w-4xl">
+                                        <template x-if="currentMedia.tipo_arquivo === 'imagem'">
+                                            <img :src="'/' + currentMedia.caminho_arquivo" :alt="currentMedia.nome_arquivo"
+                                                class="max-w-full max-h-[60vh] object-contain rounded-lg shadow-2xl mx-auto">
+                                        </template>
+
+                                        <template x-if="currentMedia.tipo_arquivo === 'video'">
+                                            <video controls autoplay
+                                                class="max-w-full max-h-[60vh] rounded-lg shadow-2xl mx-auto">
+                                                <source :src="'/' + currentMedia.caminho_arquivo"
+                                                    :type="currentMedia.tipo_mime">
+                                                Seu navegador não suporta vídeos.
+                                            </video>
+                                        </template>
+
+                                        <template x-if="currentMedia.tipo_arquivo === 'audio'">
+                                            <div class="bg-gray-900 p-8 rounded-2xl shadow-2xl max-w-md mx-auto">
+                                                <div class="flex flex-col items-center">
+                                                    <svg class="w-20 h-20 text-white mb-6" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                                    </svg>
+                                                    <p class="text-white font-semibold mb-4"
+                                                        x-text="currentMedia.nome_arquivo"></p>
+                                                    <audio controls class="w-full">
+                                                        <source :src="'/' + currentMedia.caminho_arquivo"
+                                                            :type="currentMedia.tipo_mime">
+                                                        Seu navegador não suporta áudio.
+                                                    </audio>
+                                                </div>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="!['imagem','video','audio'].includes(currentMedia.tipo_arquivo)">
+                                            <div class="bg-gray-900 p-12 rounded-2xl shadow-2xl max-w-md mx-auto">
+                                                <div class="flex flex-col items-center text-center">
+                                                    <svg class="w-24 h-24 text-gray-400 mb-6" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    <h4 class="text-xl font-bold text-white mb-2"
+                                                        x-text="currentMedia.nome_arquivo"></h4>
+                                                    <p class="text-gray-300 mb-6" x-text="currentMedia.tipo_arquivo"></p>
+                                                    <a :href="'/' + currentMedia.caminho_arquivo" target="_blank"
+                                                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
+                                                        Baixar Arquivo
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Contador -->
+                                    <div class="mt-8 text-white text-center">
+                                        <span x-text="currentIndex + 1"></span> de <span x-text="midias.length"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 <?php endif; ?>
+            </div>
 
-                <!-- Estatísticas rápidas -->
-                <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalhes</h3>
-                    <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="p-3 bg-blue-50 rounded-lg">
-                            <p class="text-2xl font-bold text-blue-600"><?= count($evento['midias'] ?? []) ?></p>
-                            <p class="text-sm text-gray-600">Mídias</p>
+            <!-- Coluna 2: Sidebar -->
+            <div class="space-y-8">
+                <!-- Card de Status -->
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">Status do Evento</h2>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="text-center">
+                            <div :class="getStatusClasses('<?= $evento['status'] ?>')"
+                                class="inline-flex items-center gap-3 px-6 py-4 rounded-xl mb-4">
+                                <span class="w-4 h-4 rounded-full"
+                                    :class="getStatusDotClass('<?= $evento['status'] ?>')"></span>
+                                <span class="text-lg font-bold"
+                                    x-text="getStatusText('<?= $evento['status'] ?>')"></span>
+                            </div>
+
+                            <p class="text-sm text-gray-600 mb-4"
+                                x-text="getStatusDescription('<?= $evento['status'] ?>')"></p>
+
+                            <div class="text-xs text-gray-500">
+                                Última atualização:
+                                <?= !empty($evento['atualizado_em']) ? date('d/m/Y H:i', strtotime($evento['atualizado_em'])) : 'Nunca' ?>
+                            </div>
                         </div>
-                        <div class="p-3 bg-green-50 rounded-lg">
-                            <p class="text-2xl font-bold text-green-600">
-                                <?= floor((strtotime($evento['data_fim']) - time()) / (60 * 60 * 24)) ?>
-                            </p>
-                            <p class="text-sm text-gray-600">Dias restantes</p>
+                    </div>
+                </div>
+
+                <!-- Card de Ações Rápidas -->
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-600 to-emerald-700 px-6 py-4">
+                        <h2 class="text-xl font-bold text-white">Ações</h2>
+                    </div>
+
+                    <div class="p-6">
+                        <div class="space-y-3">
+                            <a href="/admin/evento/<?= $evento['id'] ?>/editar"
+                                class="group flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 rounded-xl transition-all duration-300">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Editar Evento</p>
+                                        <p class="text-xs text-gray-600">Modificar informações</p>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+
+                            <a href="/admin/midia"
+                                class="group flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-100 hover:from-purple-100 hover:to-pink-200 rounded-xl transition-all duration-300">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">Gerenciar Mídias</p>
+                                        <p class="text-xs text-gray-600">Adicionar/remover arquivos</p>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+
+                            <button @click="showDeleteModal = true"
+                                class="group flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-rose-100 hover:from-red-100 hover:to-rose-200 rounded-xl transition-all duration-300 w-full text-left">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 bg-gradient-to-r from-red-500 to-rose-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-red-900">Excluir Evento</p>
+                                        <p class="text-xs text-red-600">Remover permanentemente</p>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-red-400 group-hover:text-red-600 transition-colors" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Mídias relacionadas -->
-        <?php if (!empty($evento['midias'])): ?>
-            <div x-data="mediaGallery(<?= htmlspecialchars(json_encode($evento['midias'])) ?>)" x-cloak
-                class="mt-10 relative z-10">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-semibold text-gray-800">Mídias do Evento</h3>
-                    <span class="text-sm text-gray-500"><?= count($evento['midias']) ?> arquivo(s)</span>
-                </div>
+        <!-- Modal de Confirmação de Exclusão -->
+        <div x-show="showDeleteModal" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="display: none;">
+            <div class="absolute inset-0 bg-black bg-opacity-50" @click="showDeleteModal = false"></div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <?php foreach ($evento['midias'] as $i => $m): ?>
-                        <div class="group relative bg-white rounded-xl border border-gray-200 p-3 hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
-                            @click="openGallery(<?= $i ?>)" role="button" tabindex="0" @keydown.enter="openGallery(<?= $i ?>)"
-                            aria-label="Visualizar <?= htmlspecialchars($m['nome_arquivo']) ?>">
+            <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                <div class="text-center">
+                    <div
+                        class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center">
+                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.998-.833-2.732 0L4.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                    </div>
 
-                            <!-- Overlay hover -->
-                            <div
-                                class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-xl transition-all duration-300">
-                            </div>
+                    <h2 class="text-xl font-bold text-gray-900 mb-2">Excluir Evento</h2>
+                    <p class="text-gray-600 mb-1">
+                        <strong class="font-semibold"><?= htmlspecialchars($evento['titulo']) ?></strong>
+                    </p>
+                    <p class="text-gray-500 text-sm mb-6">
+                        Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.
+                    </p>
 
-                            <!-- Ícone de tipo de arquivo -->
-                            <div class="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-1.5 shadow-sm">
-                                <?php if ($m['tipo_arquivo'] === 'imagem'): ?>
-                                    <span class="text-xs">🖼️</span>
-                                <?php elseif ($m['tipo_arquivo'] === 'video'): ?>
-                                    <span class="text-xs">🎬</span>
-                                <?php elseif ($m['tipo_arquivo'] === 'audio'): ?>
-                                    <span class="text-xs">🎵</span>
-                                <?php else: ?>
-                                    <span class="text-xs">📄</span>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- Preview -->
-                            <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-3">
-                                <?php if ($m['tipo_arquivo'] === 'imagem'): ?>
-                                    <img src="/<?= $m['caminho_arquivo'] ?>" alt="<?= htmlspecialchars($m['nome_arquivo']) ?>"
-                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                                <?php elseif ($m['tipo_arquivo'] === 'video'): ?>
-                                    <div
-                                        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
-                                        <video src="/<?= $m['caminho_arquivo'] ?>"
-                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            autoplay muted></video>
-                                    </div>
-                                <?php elseif ($m['tipo_arquivo'] === 'audio'): ?>
-                                    <div
-                                        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-100 to-emerald-100">
-                                        <span class="text-4xl">🎵</span>
-                                    </div>
-                                <?php else: ?>
-                                    <div
-                                        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                                        <span class="text-4xl">📄</span>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- Nome do arquivo -->
-                            <p
-                                class="text-sm font-medium text-gray-800 truncate text-center group-hover:text-blue-600 transition-colors">
-                                <?= htmlspecialchars($m['nome_arquivo']) ?>
-                            </p>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <!-- Modal Gallery -->
-                <div x-show="isOpen" x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"
-                    style="display: none;" @keydown.escape="closeGallery" role="dialog" aria-label="Visualizador de mídia"
-                    aria-modal="true">
-
-                    <div class="relative max-w-6xl w-full max-h-[90vh] flex items-center justify-center">
-                        <!-- Botão fechar -->
-                        <button @click="closeGallery"
-                            class="absolute top-4 right-4 bg-white text-gray-800 rounded-full w-10 h-10 flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors z-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
-                            aria-label="Fechar visualizador">
-                            ✕
+                    <div class="flex justify-center gap-3">
+                        <button @click="showDeleteModal = false"
+                            class="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:border-gray-400 hover:text-gray-900 hover:shadow-lg transition-all duration-300 font-medium">
+                            Cancelar
                         </button>
-
-                        <!-- Navegação -->
-                        <button @click="previous" :disabled="midias.length <= 1"
-                            class="absolute left-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-white z-50"
-                            :class="{ 'hidden': midias.length <= 1 }" aria-label="Mídia anterior">
-                            ❮
-                        </button>
-
-                        <button @click="next" :disabled="midias.length <= 1"
-                            class="absolute right-4 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-full w-10 h-10 flex items-center justify-center backdrop-blur-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-white z-50"
-                            :class="{ 'hidden': midias.length <= 1 }" aria-label="Próxima mídia">
-                            ❯
-                        </button>
-
-                        <!-- Conteúdo da mídia -->
-                        <div class="bg-white rounded-2xl overflow-hidden shadow-2xl w-full max-w-4xl">
-                            <div class="p-4 bg-gray-900 text-white text-center mb-4">
-                                <p x-text="currentMedia.nome_arquivo" class="font-medium truncate"></p>
-                                <p x-text="`${currentIndex + 1} de ${midias.length}`" class="text-sm text-gray-300"></p>
-                            </div>
-
-                            <div class="flex items-center justify-center min-h-[400px] max-h-[70vh] bg-black p-4">
-                                <template x-if="currentMedia.tipo_arquivo === 'imagem'">
-                                    <img :src="'/' + currentMedia.caminho_arquivo" :alt="currentMedia.nome_arquivo"
-                                        class="max-w-full max-h-full object-contain">
-                                </template>
-
-                                <template x-if="currentMedia.tipo_arquivo === 'video'">
-                                    <video controls autoplay muted class="max-w-full max-h-full"
-                                        :poster="currentMedia.thumbnail ? '/' + currentMedia.thumbnail : ''">
-                                        <source :src="'/' + currentMedia.caminho_arquivo" :type="currentMedia.tipo_mime">
-                                        Seu navegador não suporta o elemento de vídeo.
-                                    </video>
-                                </template>
-
-                                <template x-if="currentMedia.tipo_arquivo === 'audio'">
-                                    <div class="text-center p-8">
-                                        <div class="text-6xl mb-4">🎵</div>
-                                        <audio controls autoplay class="w-full max-w-md">
-                                            <source :src="'/' + currentMedia.caminho_arquivo"
-                                                :type="currentMedia.tipo_mime">
-                                            Seu navegador não suporta o elemento de áudio.
-                                        </audio>
-                                    </div>
-                                </template>
-
-                                <template x-if="!['imagem','video','audio'].includes(currentMedia.tipo_arquivo)">
-                                    <div class="text-center p-8 text-white">
-                                        <div class="text-6xl mb-4">📄</div>
-                                        <p class="text-xl mb-4">Visualização não disponível</p>
-                                        <a :href="'/' + currentMedia.caminho_arquivo"
-                                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg inline-flex items-center gap-2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black">
-                                            📥 Baixar Arquivo
-                                        </a>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
+                        <a href="/admin/evento/<?= $evento['id'] ?>/deletar"
+                            class="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 font-medium">
+                            Sim, Excluir
+                        </a>
                     </div>
                 </div>
-            </div>
-        <?php endif; ?>
-
-        <!-- Ações -->
-        <div class="mt-10 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex flex-wrap gap-3">
-                <a href="/admin/evento/<?= $evento['id'] ?>/editar"
-                    class="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2 font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2">
-                    <span>✏️</span>
-                    Editar Evento
-                </a>
-
-                <button onclick="window.history.back()"
-                    class="border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 px-6 py-3 rounded-xl transition-all duration-300 hover:shadow-lg flex items-center gap-2 font-medium focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
-                    <span>←</span>
-                    Voltar
-                </button>
-            </div>
-
-            <div class="text-sm text-gray-500 flex items-center gap-4">
-                <span>Criado em: <?= date('d/m/Y H:i', strtotime($evento['created_at'] ?? 'now')) ?></span>
-                <?php if (!empty($evento['updated_at'])): ?>
-                    <span>Atualizado em: <?= date('d/m/Y H:i', strtotime($evento['updated_at'])) ?></span>
-                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    function eventView() {
+        return {
+            showDeleteModal: false,
+
+            getStatusClasses(status) {
+                const classes = {
+                    'pendente': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                    'em_andamento': 'bg-blue-100 text-blue-800 border border-blue-200',
+                    'concluido': 'bg-green-100 text-green-800 border border-green-200',
+                    'cancelado': 'bg-red-100 text-red-800 border border-red-200'
+                };
+                return classes[status] || 'bg-gray-100 text-gray-800 border border-gray-200';
+            },
+
+            getStatusDotClass(status) {
+                const classes = {
+                    'pendente': 'bg-yellow-500',
+                    'em_andamento': 'bg-blue-500',
+                    'concluido': 'bg-green-500',
+                    'cancelado': 'bg-red-500'
+                };
+                return classes[status] || 'bg-gray-500';
+            },
+
+            getStatusText(status) {
+                const texts = {
+                    'pendente': 'Pendente',
+                    'em_andamento': 'Em Andamento',
+                    'concluido': 'Concluído',
+                    'cancelado': 'Cancelado'
+                };
+                return texts[status] || status;
+            },
+
+            getStatusDescription(status) {
+                const descriptions = {
+                    'pendente': 'Evento agendado para o futuro',
+                    'em_andamento': 'Evento atualmente em andamento',
+                    'concluido': 'Evento já finalizado',
+                    'cancelado': 'Evento cancelado'
+                };
+                return descriptions[status] || '';
+            }
+        }
+    }
+
     function mediaGallery(midias) {
         return {
             midias,
@@ -346,19 +619,6 @@ ob_start();
                         case 'ArrowLeft':
                             this.previous();
                             break;
-                    }
-                });
-
-                // Fechar ao clicar no backdrop
-                this.$watch('isOpen', (value) => {
-                    if (value) {
-                        this.$nextTick(() => {
-                            this.$refs.modal?.addEventListener('click', (e) => {
-                                if (e.target === this.$refs.modal) {
-                                    this.closeGallery();
-                                }
-                            });
-                        });
                     }
                 });
             }

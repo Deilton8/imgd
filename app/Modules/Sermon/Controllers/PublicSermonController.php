@@ -7,41 +7,52 @@ use App\Modules\Sermon\Models\Sermon;
 
 class PublicSermonController extends Controller
 {
-    private $sermonModel;
+    private Sermon $sermonModel;
 
     public function __construct()
     {
         $this->sermonModel = new Sermon();
     }
 
-    public function index()
+    public function index(): void
     {
-        $sermoesRaw = $this->sermonModel->all();
-        $sermoes = [];
-
-        foreach ($sermoesRaw as $sermon) {
-            $sermoes[] = $this->sermonModel->findWithMedia($sermon['id']);
-        }
+        $rawSermons = $this->sermonModel->getAll();
+        $enrichedSermons = $this->enrichSermonsWithMedia($rawSermons);
 
         $title = "Sermões";
+
         View::render("Sermon/Views/public/index", [
-            "sermoes" => $sermoes,
+            "sermoes" => $enrichedSermons,
             "title" => $title
         ]);
     }
 
-    public function show($id)
+    private function enrichSermonsWithMedia(array $rawSermons): array
     {
-        $sermao = $this->sermonModel->findWithMedia($id);
-        if (!$sermao) {
+        $enrichedSermons = [];
+
+        foreach ($rawSermons as $sermon) {
+            $enrichedSermons[] = $this->sermonModel->findWithMedia($sermon['id']);
+        }
+
+        return $enrichedSermons;
+    }
+
+    public function show(string $slug): void
+    {
+        // Usar o novo método que busca por slug com mídias
+        $sermon = $this->sermonModel->findWithMediaBySlug($slug);
+
+        if (!$sermon) {
             http_response_code(404);
             echo "Sermão não encontrado.";
             return;
         }
 
-        $title = $sermao["titulo"];
+        $title = $sermon["titulo"];
+
         View::render("Sermon/Views/public/show", [
-            "sermao" => $sermao,
+            "sermao" => $sermon,
             "title" => $title
         ]);
     }

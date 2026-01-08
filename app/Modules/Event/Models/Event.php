@@ -6,184 +6,257 @@ use PDO;
 
 class Event extends Model
 {
-    protected $table = "eventos";
+    protected string $table = "eventos";
+    private const DEFAULT_STATUS = 'pendente';
 
-    public function all()
+    public function getAll(): array
     {
-        $stmt = $this->db->query("SELECT * FROM {$this->table} ORDER BY id DESC");
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $statement = $this->database->query("SELECT * FROM {$this->table} ORDER BY id DESC");
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function find($id)
+    public function findatabaseyId(int $id): ?array
     {
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $statement = $this->database->prepare("SELECT * FROM {$this->table} WHERE id = ?");
+        $statement->execute([$id]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
     }
 
-    /** Paginação + busca + filtros */
-    public function list($page = 1, $perPage = 10, $filters = [])
+    public function getPaginatedList(int $page = 1, int $perPage = 10, array $filters = []): array
     {
         $offset = ($page - 1) * $perPage;
-        $where = "WHERE id IS NOT NULL";
-        $params = [];
+        $whereClause = "WHERE id IS NOT NULL";
+        $parameters = [];
 
-        // 🔍 Filtros opcionais
-        if (!empty($filters['search'])) {
-            $where .= " AND titulo LIKE :search";
-            $params[':search'] = "%{$filters['search']}%";
-        }
+        $whereClause = $this->applyFilters($whereClause, $parameters, $filters);
 
-        if (!empty($filters['status'])) {
-            $where .= " AND status = :status";
-            $params[':status'] = $filters['status'];
-        }
-
-        if (!empty($filters['data_inicio'])) {
-            $where .= " AND data_inicio >= :data_inicio";
-            $params[':data_inicio'] = $filters['data_inicio'];
-        }
-
-        if (!empty($filters['data_fim'])) {
-            $where .= " AND data_fim <= :data_fim";
-            $params[':data_fim'] = $filters['data_fim'];
-        }
-
-        if (!empty($filters['local'])) {
-            $where .= " AND local LIKE :local";
-            $params[':local'] = "%{$filters['local']}%";
-        }
-
-        $sql = "
+        $query = "
             SELECT * FROM {$this->table}
-            $where ORDER BY id DESC
-            LIMIT $perPage OFFSET $offset
+            {$whereClause} ORDER BY id DESC
+            LIMIT {$perPage} OFFSET {$offset}
         ";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        $eventos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $statement = $this->database->prepare($query);
+        $statement->execute($parameters);
+        $events = $statement->fetchAll(PDO::FETCH_ASSOC);
 
-        // Pegar total
-        $countStmt = $this->db->prepare("SELECT COUNT(*) FROM {$this->table} $where");
-        $countStmt->execute($params);
-        $total = $countStmt->fetchColumn();
+        $total = $this->getTotalRecords($whereClause, $parameters);
+        $totalPages = ceil($total / $perPage);
 
         return [
-            "data" => $eventos,
+            "data" => $events,
             "total" => $total,
             "page" => $page,
             "perPage" => $perPage,
-            "pages" => ceil($total / $perPage)
+            "pages" => $totalPages
         ];
     }
 
-    public function create($data)
+    private function applyFilters(string $whereClause, array &$parameters, array $filters): string
+    {
+        if (!empty($filters['search'])) {
+            $whereClause .= " AND titulo LIKE :search";
+            $parameters[':search'] = "%{$filters['search']}%";
+        }
+
+        if (!empty($filters['status'])) {
+            $whereClause .= " AND status = :status";
+            $parameters[':status'] = $filters['status'];
+        }
+
+        if (!empty($filters['data_inicio'])) {
+            $whereClause .= " AND data_inicio >= :data_inicio";
+            $parameters[':data_inicio'] = $filters['data_inicio'];
+        }
+
+        if (!empty($filters['data_fim'])) {
+            $whereClause .= " AND data_fim <= :data_fim";
+            $parameters[':data_fim'] = $filters['data_fim'];
+        }
+
+        if (!empty($filters['local'])) {
+            $whereClause .= " AND local LIKE :local";
+            $parameters[':local'] = "%{$filters['local']}%";
+        }
+
+        return $whereClause;
+    }
+
+    private function getTotalRecords(string $whereClause, array $parameters): int
+    {
+        $countQuery = "SELECT COUNT(*) FROM {$this->table} {$whereClause}";
+        $countStatement = $this->database->prepare($countQuery);
+        $countStatement->execute($parameters);
+
+        return (int) $countStatement->fetchColumn();
+    }
+
+    public function createRecord(array $data): int
     {
         $data['slug'] = $this->generateSlug($data['titulo']);
 
-        $stmt = $this->db->prepare("INSERT INTO {$this->table} 
+        $query = "
+            INSERT INTO {$this->table} 
             (titulo, descricao, local, data_inicio, data_fim, status, slug) 
-            VALUES (:titulo, :descricao, :local, :data_inicio, :data_fim, :status, :slug)");
+            VALUES (:titulo, :descricao, :local, :data_inicio, :data_fim, :status, :slug)
+        ";
 
-        $stmt->execute([
+        $statement = $this->database->prepare($query);
+        $statement->execute([
             ':titulo' => $data['titulo'],
             ':descricao' => $data['descricao'],
             ':local' => $data['local'],
             ':data_inicio' => $data['data_inicio'],
             ':data_fim' => $data['data_fim'] ?? null,
-            ':status' => $data['status'] ?? 'pendente',
+            ':status' => $data['status'] ?? self::DEFAULT_STATUS,
             ':slug' => $data['slug']
         ]);
 
-        return $this->db->lastInsertId();
+        return (int) $this->database->lastInsertId();
     }
 
-    public function update($id, $data)
+    public function deleteRecord(int $id): bool
     {
-        $stmt = $this->db->prepare("UPDATE {$this->table} 
-            SET titulo=:titulo, descricao=:descricao, local=:local, data_inicio=:data_inicio, data_fim=:data_fim, status=:status 
-            WHERE id=:id");
+        $statement = $this->database->prepare("DELETE FROM {$this->table} WHERE id=?");
+        return $statement->execute([$id]);
+    }
 
-        return $stmt->execute([
+    public function attachMedia(int $eventId, array $mediaIds): void
+    {
+        $query = "INSERT IGNORE INTO midia_eventos (midia_id, evento_id) VALUES (:midia_id, :evento_id)";
+        $statement = $this->database->prepare($query);
+
+        foreach ($mediaIds as $mediaId) {
+            $statement->execute([
+                ':midia_id' => $mediaId,
+                ':evento_id' => $eventId
+            ]);
+        }
+    }
+
+    public function getAttachedMedia(int $eventId): array
+    {
+        $query = "
+            SELECT m.* 
+            FROM midia_eventos me
+            JOIN midia m ON me.midia_id = m.id
+            WHERE me.evento_id = ?
+        ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$eventId]);
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function detachMedia(int $eventId, int $mediaId): bool
+    {
+        $query = "DELETE FROM midia_eventos WHERE evento_id=? AND midia_id=?";
+        $statement = $this->database->prepare($query);
+        return $statement->execute([$eventId, $mediaId]);
+    }
+
+    public function findWithMedia(int $id): ?array
+    {
+        $query = "
+            SELECT e.*, m.id AS midia_id, m.nome_arquivo, m.caminho_arquivo, m.tipo_arquivo, m.tipo_mime
+            FROM {$this->table} e
+            LEFT JOIN midia_eventos me ON me.evento_id = e.id
+            LEFT JOIN midia m ON m.id = me.midia_id
+            WHERE e.id = ?
+        ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$id]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$rows) {
+            return null;
+        }
+
+        $event = $this->buildEventFromRows($rows);
+        return $event;
+    }
+
+     public function findBySlug(string $slug): ?array
+    {
+        $statement = $this->database->prepare("SELECT * FROM {$this->table} WHERE slug = ?");
+        $statement->execute([$slug]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
+    }
+
+    public function findWithMediaBySlug(string $slug): ?array
+    {
+        $query = "
+            SELECT e.*, m.id AS midia_id, m.nome_arquivo, m.caminho_arquivo, m.tipo_arquivo, m.tipo_mime
+            FROM {$this->table} e
+            LEFT JOIN midia_eventos me ON me.evento_id = e.id
+            LEFT JOIN midia m ON m.id = me.midia_id
+            WHERE e.slug = ?
+        ";
+
+        $statement = $this->database->prepare($query);
+        $statement->execute([$slug]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$rows) {
+            return null;
+        }
+
+        $event = $this->buildEventFromRows($rows);
+        return $event;
+    }
+
+    public function updateRecord(int $id, array $data): bool
+    {
+        // Gerar slug se o título foi alterado
+        if (isset($data['titulo'])) {
+            $data['slug'] = $this->generateSlug($data['titulo']);
+        }
+
+        $query = "
+            UPDATE {$this->table} 
+            SET titulo=:titulo, descricao=:descricao, local=:local, 
+                data_inicio=:data_inicio, data_fim=:data_fim, status=:status, slug=:slug
+            WHERE id=:id
+        ";
+
+        $statement = $this->database->prepare($query);
+        return $statement->execute([
             ':titulo' => $data['titulo'],
             ':descricao' => $data['descricao'],
             ':local' => $data['local'],
             ':data_inicio' => $data['data_inicio'],
             ':data_fim' => $data['data_fim'] ?? null,
             ':status' => $data['status'],
+            ':slug' => $data['slug'],
             ':id' => $id
         ]);
     }
 
-    public function delete($id)
+    private function buildEventFromRows(array $rows): array
     {
-        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id=?");
-        return $stmt->execute([$id]);
-    }
-
-    // 🔗 Relacionar mídias com eventos
-    public function attachMedia($eventId, $mediaIds = [])
-    {
-        $stmt = $this->db->prepare("INSERT IGNORE INTO midia_eventos (midia_id, evento_id) VALUES (:midia_id, :evento_id)");
-
-        foreach ($mediaIds as $midiaId) {
-            $stmt->execute([
-                ':midia_id' => $midiaId,
-                ':evento_id' => $eventId
-            ]);
-        }
-    }
-
-    public function getMedia($eventId)
-    {
-        $stmt = $this->db->prepare("
-            SELECT m.* 
-            FROM midia_eventos me
-            JOIN midia m ON me.midia_id = m.id
-            WHERE me.evento_id = ?
-        ");
-        $stmt->execute([$eventId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function detachMedia($eventId, $midiaId)
-    {
-        $stmt = $this->db->prepare("DELETE FROM midia_eventos WHERE evento_id=? AND midia_id=?");
-        return $stmt->execute([$eventId, $midiaId]);
-    }
-
-    public function findWithMedia($id)
-    {
-        $stmt = $this->db->prepare("
-        SELECT e.*, m.id AS midia_id, m.nome_arquivo, m.caminho_arquivo, m.tipo_arquivo, m.tipo_mime
-        FROM {$this->table} e
-        LEFT JOIN midia_eventos me ON me.evento_id = e.id
-        LEFT JOIN midia m ON m.id = me.midia_id
-        WHERE e.id = ?
-    ");
-        $stmt->execute([$id]);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if (!$rows)
-            return null;
-
-        $evento = [
-            "id" => $rows[0]['id'],
-            "titulo" => $rows[0]['titulo'],
-            "descricao" => $rows[0]['descricao'],
-            "local" => $rows[0]['local'],
-            "data_inicio" => $rows[0]['data_inicio'],
-            "data_fim" => $rows[0]['data_fim'],
-            "status" => $rows[0]['status'],
-            "criado_em" => $rows[0]['criado_em'],
-            "atualizado_em" => $rows[0]['atualizado_em'],
+        $firstRow = $rows[0];
+        $event = [
+            "id" => $firstRow['id'],
+            "titulo" => $firstRow['titulo'],
+            "descricao" => $firstRow['descricao'],
+            "local" => $firstRow['local'],
+            "data_inicio" => $firstRow['data_inicio'],
+            "data_fim" => $firstRow['data_fim'],
+            "status" => $firstRow['status'],
+            "criado_em" => $firstRow['criado_em'],
+            "atualizado_em" => $firstRow['atualizado_em'],
             "midias" => []
         ];
 
         foreach ($rows as $row) {
             if (!empty($row['midia_id'])) {
-                $evento['midias'][] = [
+                $event['midias'][] = [
                     "id" => $row['midia_id'],
                     "nome_arquivo" => $row['nome_arquivo'],
                     "caminho_arquivo" => $row['caminho_arquivo'],
@@ -193,38 +266,45 @@ class Event extends Model
             }
         }
 
-        return $evento;
+        return $event;
     }
 
-    /** Slug auto */
-    public function generateSlug($titulo)
+    public function generateSlug(string $title): string
     {
-        $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $titulo), '-'));
+        $slug = strtolower(trim(preg_replace('/[^a-zA-Z0-9]+/', '-', $title), '-'));
 
-        // garantir slug único
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM {$this->table} WHERE slug = ?");
-        $stmt->execute([$slug]);
-
-        if ($stmt->fetchColumn() > 0) {
+        if ($this->slugExists($slug)) {
             $slug .= "-" . uniqid();
         }
 
         return $slug;
     }
 
-    public function getNextEvent()
+    private function slugExists(string $slug): bool
+    {
+        $query = "SELECT COUNT(*) FROM {$this->table} WHERE slug = ?";
+        $statement = $this->database->prepare($query);
+        $statement->execute([$slug]);
+
+        return $statement->fetchColumn() > 0;
+    }
+
+    public function getNextEvent(): ?array
     {
         $currentDate = date('Y-m-d H:i:s');
 
-        $stmt = $this->db->prepare("
-        SELECT * FROM {$this->table} 
-        WHERE data_inicio > ? 
-        AND status = 'pendente' OR status = 'em andamento'
-        ORDER BY data_inicio ASC 
-        LIMIT 1
-    ");
+        $query = "
+            SELECT * FROM {$this->table} 
+            WHERE data_inicio > ? 
+            AND (status = 'pendente' OR status = 'em andamento')
+            ORDER BY data_inicio ASC 
+            LIMIT 1
+        ";
 
-        $stmt->execute([$currentDate]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $statement = $this->database->prepare($query);
+        $statement->execute([$currentDate]);
+
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result ?: null;
     }
 }

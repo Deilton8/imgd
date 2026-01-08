@@ -93,7 +93,7 @@
             loop: true,
             speed: 1000,
             autoplay: {
-                delay: 5000,
+                delay: 3000,
                 disableOnInteraction: false,
             },
             effect: 'fade',
@@ -105,44 +105,6 @@
 </script>
 
 <style>
-    /* Estilos personalizados para o carrossel */
-    .carrossel-transformacao .swiper-pagination-bullet {
-        background: white;
-        opacity: 0.6;
-        width: 12px;
-        height: 12px;
-        margin: 0 8px !important;
-    }
-
-    .carrossel-transformacao .swiper-pagination-bullet-active {
-        background: #f59e0b;
-        opacity: 1;
-        transform: scale(1.2);
-    }
-
-    .carrossel-transformacao .swiper-button-next,
-    .carrossel-transformacao .swiper-button-prev {
-        color: white;
-        background: rgba(255, 255, 255, 0.1);
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-    }
-
-    .carrossel-transformacao .swiper-button-next:hover,
-    .carrossel-transformacao .swiper-button-prev:hover {
-        background: rgba(245, 158, 11, 0.8);
-        transform: scale(1.1);
-    }
-
-    .carrossel-transformacao .swiper-button-next:after,
-    .carrossel-transformacao .swiper-button-prev:after {
-        font-size: 24px;
-        font-weight: bold;
-    }
-
     /* Animações para o conteúdo */
     .text-center h2 span {
         animation: fadeInUp 1s ease-out;
@@ -175,7 +137,7 @@
 
     /* Efeito de brilho no texto */
     .text-center h2 {
-        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        text-shadow: 0 8px 8px rgba(0, 0, 0, 0.5);
     }
 
     /* Responsividade */
@@ -186,17 +148,6 @@
 
         .text-center p {
             font-size: 1.125rem !important;
-        }
-
-        .carrossel-transformacao .swiper-button-next,
-        .carrossel-transformacao .swiper-button-prev {
-            width: 40px;
-            height: 40px;
-        }
-
-        .carrossel-transformacao .swiper-button-next:after,
-        .carrossel-transformacao .swiper-button-prev:after {
-            font-size: 18px;
         }
     }
 

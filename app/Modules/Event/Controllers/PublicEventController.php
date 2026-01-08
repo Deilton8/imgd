@@ -7,44 +7,51 @@ use App\Modules\Event\Models\Event;
 
 class PublicEventController extends Controller
 {
-    private $eventModel;
+    private Event $eventModel;
 
     public function __construct()
     {
         $this->eventModel = new Event();
     }
 
-    // Lista de eventos públicos
-    public function index()
+    public function index(): void
     {
-        $eventosRaw = $this->eventModel->all();
-        $eventos = [];
-
-        foreach ($eventosRaw as $evento) {
-            $eventos[] = $this->eventModel->findWithMedia($evento['id']);
-        }
+        $rawEvents = $this->eventModel->getAll();
+        $enrichedEvents = $this->enrichEventsWithMedia($rawEvents);
 
         $title = "Eventos - IMGD";
+
         View::render("Event/Views/public/index", [
-            "eventos" => $eventos,
+            "eventos" => $enrichedEvents,
             "title" => $title
         ]);
     }
 
-    // Página de evento individual
-    public function show($id)
+    private function enrichEventsWithMedia(array $rawEvents): array
     {
-        $evento = $this->eventModel->findWithMedia($id);
+        $enrichedEvents = [];
 
-        if (!$evento) {
+        foreach ($rawEvents as $event) {
+            $enrichedEvents[] = $this->eventModel->findWithMedia($event['id']);
+        }
+
+        return $enrichedEvents;
+    }
+
+    public function show(string $slug): void
+    {
+        $event = $this->eventModel->findWithMediaBySlug($slug);
+
+        if (!$event) {
             http_response_code(404);
             echo "Evento não encontrado.";
             return;
         }
 
-        $title = $evento["titulo"];
+        $title = $event["titulo"] . " - Evento IMGD";
+
         View::render("Event/Views/public/show", [
-            "evento" => $evento,
+            "evento" => $event,
             "title" => $title
         ]);
     }

@@ -8,37 +8,40 @@ use App\Modules\Media\Models\Media;
 
 class EventController extends Controller
 {
-    private $eventModel;
-    private $mediaModel;
+    private const DEFAULT_PER_PAGE = 10;
+
+    private Event $eventModel;
+    private Media $mediaModel;
 
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        if (empty($_SESSION["usuario"])) {
-            header("Location: /admin/login");
-            exit();
-        }
+        $this->initializeSession();
+        $this->redirectIfNotAuthenticated();
 
         $this->eventModel = new Event();
         $this->mediaModel = new Media();
     }
 
-    public function index()
+    private function initializeSession(): void
     {
-        $page = $_GET['page'] ?? 1;
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+    }
 
-        $filters = [
-            "search" => $_GET['search'] ?? null,
-            "status" => $_GET['status'] ?? null,
-            "data_inicio" => $_GET['data_inicio'] ?? null,
-            "data_fim" => $_GET['data_fim'] ?? null,
-            "local" => $_GET['local'] ?? null,
-        ];
+    private function redirectIfNotAuthenticated(): void
+    {
+        if (empty($_SESSION["usuario"])) {
+            header("Location: /admin/login");
+            exit();
+        }
+    }
 
-        $result = $this->eventModel->list($page, 10, $filters);
+    public function index(): void
+    {
+        $page = (int) ($_GET['page'] ?? 1);
+        $filters = $this->extractFiltersFromRequest();
+        $result = $this->eventModel->getPaginatedList($page, self::DEFAULT_PER_PAGE, $filters);
 
         View::render("Event/Views/admin/index", [
             "eventos" => $result['data'],
@@ -48,48 +51,88 @@ class EventController extends Controller
         ]);
     }
 
-    public function show($id)
+    private function extractFiltersFromRequest(): array
+    {
+        return [
+            "search" => $_GET['search'] ?? null,
+            "status" => $_GET['status'] ?? null,
+            "data_inicio" => $_GET['data_inicio'] ?? null,
+            "data_fim" => $_GET['data_fim'] ?? null,
+            "local" => $_GET['local'] ?? null,
+        ];
+    }
+
+    public function show(int $id): void
     {
         $evento = $this->eventModel->findWithMedia($id);
         $title = "Detalhes do evento";
-        View::render("Event/Views/admin/show", ["evento" => $evento, "title" => $title]);
+
+        View::render("Event/Views/admin/show", [
+            "evento" => $evento,
+            "title" => $title
+        ]);
     }
 
-    public function create()
+    public function create(): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $eventId = $this->eventModel->create($_POST);
-
-            if (!empty($_POST['midias'])) {
-                $this->eventModel->attachMedia($eventId, $_POST['midias']);
-            }
-
-            header("Location: /admin/eventos");
-            exit;
+            $this->handleCreatePostRequest();
+            return;
         }
 
-        $midias = $this->mediaModel->all();
+        $this->renderCreateForm();
+    }
+
+    private function handleCreatePostRequest(): void
+    {
+        $eventId = $this->eventModel->createRecord($_POST);
+
+        if (!empty($_POST['midias'])) {
+            $this->eventModel->attachMedia($eventId, $_POST['midias']);
+        }
+
+        header("Location: /admin/eventos");
+        exit;
+    }
+
+    private function renderCreateForm(): void
+    {
+        $midias = $this->mediaModel->getAll();
         $title = "Criar Evento";
-        View::render("Event/Views/admin/create", ["title" => $title, "midias" => $midias]);
+
+        View::render("Event/Views/admin/create", [
+            "title" => $title,
+            "midias" => $midias
+        ]);
     }
 
-    public function edit($id)
+    public function edit(int $id): void
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->eventModel->update($id, $_POST);
-
-            // atualizar mídias vinculadas
-            if (!empty($_POST['midias'])) {
-                $this->eventModel->attachMedia($id, $_POST['midias']);
-            }
-
-            header("Location: /admin/eventos");
-            exit;
+            $this->handleEditPostRequest($id);
+            return;
         }
 
-        $evento = $this->eventModel->find($id);
-        $midias = $this->mediaModel->all();
-        $midiasEvento = $this->eventModel->getMedia($id);
+        $this->renderEditForm($id);
+    }
+
+    private function handleEditPostRequest(int $id): void
+    {
+        $this->eventModel->updateRecord($id, $_POST);
+
+        if (!empty($_POST['midias'])) {
+            $this->eventModel->attachMedia($id, $_POST['midias']);
+        }
+
+        header("Location: /admin/eventos");
+        exit;
+    }
+
+    private function renderEditForm(int $id): void
+    {
+        $evento = $this->eventModel->findatabaseyId($id);
+        $midias = $this->mediaModel->getAll();
+        $midiasEvento = $this->eventModel->getAttachedMedia($id);
         $title = "Editar Evento";
 
         View::render("Event/Views/admin/edit", [
@@ -100,9 +143,9 @@ class EventController extends Controller
         ]);
     }
 
-    public function delete($id)
+    public function delete(int $id): void
     {
-        $this->eventModel->delete($id);
+        $this->eventModel->deleteRecord($id);
         header("Location: /admin/eventos");
         exit;
     }

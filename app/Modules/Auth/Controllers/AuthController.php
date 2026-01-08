@@ -10,8 +10,17 @@ class AuthController extends Controller
 {
     private Auth $authModel;
     private EmailService $emailService;
+    private array $publicPages = ['/admin/login', '/admin/esqueci-senha', '/admin/resetar-senha'];
 
     public function __construct()
+    {
+        $this->initializeSecureSession();
+        $this->authModel = new Auth();
+        $this->emailService = new EmailService();
+        $this->attemptAutoLogin();
+    }
+
+    private function initializeSecureSession(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start([
@@ -20,137 +29,164 @@ class AuthController extends Controller
                 'cookie_samesite' => 'Strict'
             ]);
         }
-
-        $this->authModel = new Auth();
-        $this->emailService = new EmailService();
-        $this->autoLogin();
     }
 
-    private function autoLogin(): void
+    private function attemptAutoLogin(): void
     {
         if (!isset($_SESSION['usuario']) && isset($_COOKIE['remember_token'])) {
-            $usuario = $this->authModel->autenticarPorToken($_COOKIE['remember_token']);
+            $user = $this->authModel->authenticateByToken($_COOKIE['remember_token']);
 
-            if ($usuario) {
-                $this->criarSessaoUsuario($usuario);
-
-                // Redireciona se não estiver em página pública
-                if (!$this->estaEmPaginaPublica()) {
-                    header("Location: /admin");
-                    exit;
-                }
+            if ($user) {
+                $this->createUserSession($user);
+                $this->redirectIfNotOnPublicPage();
             } else {
-                // Token inválido - limpa cookie
-                setcookie('remember_token', '', time() - 3600, '/', '', true, true);
+                $this->clearInvalidToken();
             }
         }
     }
 
-    private function estaEmPaginaPublica(): bool
+    private function redirectIfNotOnPublicPage(): void
     {
-        $uri = $_SERVER['REQUEST_URI'] ?? '';
-        $paginasPublicas = ['/admin/login', '/admin/esqueci-senha', '/admin/resetar-senha'];
-        return in_array($uri, $paginasPublicas);
+        if (!$this->isCurrentPagePublic()) {
+            header("Location: /admin");
+            exit;
+        }
+    }
+
+    private function isCurrentPagePublic(): bool
+    {
+        $currentUri = $_SERVER['REQUEST_URI'] ?? '';
+        return in_array($currentUri, $this->publicPages);
+    }
+
+    private function clearInvalidToken(): void
+    {
+        setcookie('remember_token', '', time() - 3600, '/', '', true, true);
     }
 
     public function login(): void
     {
-        // Se já estiver logado, redireciona
-        if (isset($_SESSION['usuario'])) {
+        if ($this->isUserLoggedIn()) {
             header("Location: /admin");
             exit;
         }
 
-        // Salva URL para redirecionamento pós-login
-        if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_SERVER['HTTP_REFERER'])) {
-            $referer = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH);
-            if (!in_array($referer, ['/admin/login', '/admin/esqueci-senha'])) {
-                $_SESSION['redirect_url'] = $referer;
-            }
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $this->saveRedirectUrl();
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->processarLogin();
+            $this->processLoginRequest();
             return;
         }
 
+        $this->renderLoginPage();
+    }
+
+    private function isUserLoggedIn(): bool
+    {
+        return isset($_SESSION['usuario']);
+    }
+
+    private function saveRedirectUrl(): void
+    {
+        if (!empty($_SERVER['HTTP_REFERER'])) {
+            $referrer = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH);
+            if (!in_array($referrer, ['/admin/login', '/admin/esqueci-senha'])) {
+                $_SESSION['redirect_url'] = $referrer;
+            }
+        }
+    }
+
+    private function processLoginRequest(): void
+    {
+        $email = $this->sanitizeEmail($_POST['email'] ?? '');
+        $password = $_POST['senha'] ?? '';
+        $rememberMe = isset($_POST['lembrar']);
+
+        if (!$this->validateLoginInput($email, $password)) {
+            $this->renderLoginWithError('Preencha todos os campos.');
+            return;
+        }
+
+        $loginResult = $this->authModel->attempt($email, $password);
+
+        if (!$loginResult['success']) {
+            $this->renderFailedLogin($email, $loginResult['error']);
+            return;
+        }
+
+        $this->handleSuccessfulLogin($loginResult['usuario'], $rememberMe);
+    }
+
+    private function validateLoginInput(string $email, string $password): bool
+    {
+        return !empty($email) && !empty($password) && filter_var($email, FILTER_VALIDATE_EMAIL);
+    }
+
+    private function renderFailedLogin(string $email, string $error): void
+    {
+        $remainingAttempts = $this->authModel->getRemainingAttempts($email);
+        $viewData = [
+            'error' => $error,
+            'email' => htmlspecialchars($email),
+            'tentativasRestantes' => $remainingAttempts,
+            'title' => 'Login - Painel Administrativo'
+        ];
+
+        if ($remainingAttempts <= 2) {
+            $viewData['warning'] = "Cuidado! Você tem apenas {$remainingAttempts} tentativa(s) restante(s).";
+        }
+
+        View::render("Auth/Views/login", $viewData);
+    }
+
+    private function handleSuccessfulLogin(array $user, bool $rememberMe): void
+    {
+        $this->createUserSession($user);
+
+        if ($rememberMe) {
+            $this->authModel->generateLoginToken($user['id']);
+        }
+
+        $this->redirectAfterLogin();
+    }
+
+    private function createUserSession(array $user): void
+    {
+        $_SESSION['usuario'] = [
+            'id' => $user['id'],
+            'nome' => $user['nome'],
+            'email' => $user['email'],
+            'papel' => $user['papel'],
+            'login_time' => time(),
+            'session_id' => session_id()
+        ];
+
+        session_regenerate_id(true);
+    }
+
+    private function redirectAfterLogin(): void
+    {
+        $redirectUrl = $_SESSION['redirect_url'] ?? '/admin';
+        unset($_SESSION['redirect_url']);
+
+        $this->setFlashMessage('Login realizado com sucesso!', 'success');
+        header("Location: " . $redirectUrl);
+        exit;
+    }
+
+    private function renderLoginPage(): void
+    {
         View::render("Auth/Views/login", [
             'title' => 'Login - Painel Administrativo'
         ]);
     }
 
-    private function processarLogin(): void
-    {
-        $email = $this->sanitizeEmail($_POST['email'] ?? '');
-        $senha = $_POST['senha'] ?? '';
-        $lembrar = isset($_POST['lembrar']);
-
-        // Validações básicas
-        if (empty($email) || empty($senha)) {
-            $this->renderLoginComErro('Preencha todos os campos.');
-            return;
-        }
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->renderLoginComErro('E-mail inválido.');
-            return;
-        }
-
-        $resultado = $this->authModel->attempt($email, $senha);
-
-        if (!$resultado['success']) {
-            $tentativasRestantes = $this->authModel->getTentativasRestantes($email);
-
-            $dadosView = [
-                'error' => $resultado['error'],
-                'email' => htmlspecialchars($email),
-                'tentativasRestantes' => $tentativasRestantes,
-                'title' => 'Login - Painel Administrativo'
-            ];
-
-            if ($tentativasRestantes <= 2) {
-                $dadosView['warning'] = "Cuidado! Você tem apenas {$tentativasRestantes} tentativa(s) restante(s).";
-            }
-
-            View::render("Auth/Views/login", $dadosView);
-            return;
-        }
-
-        // Login bem-sucedido
-        $this->criarSessaoUsuario($resultado['usuario']);
-
-        if ($lembrar) {
-            $this->authModel->gerarTokenLogin($resultado['usuario']['id']);
-        }
-
-        // Redireciona para URL original ou dashboard
-        $urlRedirecionamento = $_SESSION['redirect_url'] ?? '/admin';
-        unset($_SESSION['redirect_url']);
-
-        $this->setFlashMessage('Login realizado com sucesso!', 'success');
-        header("Location: " . $urlRedirecionamento);
-        exit;
-    }
-
-    private function criarSessaoUsuario(array $usuario): void
-    {
-        $_SESSION['usuario'] = [
-            'id' => $usuario['id'],
-            'nome' => $usuario['nome'],
-            'email' => $usuario['email'],
-            'papel' => $usuario['papel'],
-            'login_time' => time(),
-            'session_id' => session_id()
-        ];
-
-        // Regenera ID da sessão após login
-        session_regenerate_id(true);
-    }
-
-    private function renderLoginComErro(string $mensagem): void
+    private function renderLoginWithError(string $message): void
     {
         View::render("Auth/Views/login", [
-            'error' => $mensagem,
+            'error' => $message,
             'email' => htmlspecialchars($_POST['email'] ?? ''),
             'title' => 'Login - Painel Administrativo'
         ]);
@@ -158,24 +194,35 @@ class AuthController extends Controller
 
     public function logout(): void
     {
-        // Registra log de logout
         if (isset($_SESSION['usuario']['id'])) {
-            $this->authModel->registrarLog(
-                $_SESSION['usuario']['id'],
-                $_SESSION['usuario']['email'],
-                'logout'
-            );
-
-            // Limpa token remember me
-            $this->authModel->limparTokenLogin($_SESSION['usuario']['id']);
+            $this->logLogoutAction();
+            $this->clearUserToken();
         }
 
-        // Limpa cookie
+        $this->destroySession();
+        $this->redirectToLogin();
+    }
+
+    private function logLogoutAction(): void
+    {
+        $this->authModel->logAuthAction(
+            $_SESSION['usuario']['id'],
+            $_SESSION['usuario']['email'],
+            'logout'
+        );
+    }
+
+    private function clearUserToken(): void
+    {
+        $this->authModel->clearLoginToken($_SESSION['usuario']['id']);
+    }
+
+    private function destroySession(): void
+    {
         if (isset($_COOKIE['remember_token'])) {
             setcookie('remember_token', '', time() - 3600, '/', '', true, true);
         }
 
-        // Destrói sessão
         $_SESSION = [];
 
         if (ini_get("session.use_cookies")) {
@@ -192,7 +239,10 @@ class AuthController extends Controller
         }
 
         session_destroy();
+    }
 
+    private function redirectToLogin(): void
+    {
         $this->setFlashMessage('Logout realizado com sucesso!', 'success');
         header("Location: /admin/login");
         exit;
@@ -200,79 +250,100 @@ class AuthController extends Controller
 
     public function forgotPassword(): void
     {
-        if (isset($_SESSION['usuario'])) {
+        if ($this->isUserLoggedIn()) {
             header("Location: /admin");
             exit;
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $this->processarRecuperacaoSenha();
+            $this->processPasswordRecovery();
             return;
         }
 
+        $this->renderForgotPasswordPage();
+    }
+
+    private function processPasswordRecovery(): void
+    {
+        $email = $this->sanitizeEmail($_POST['email'] ?? '');
+
+        if (!$this->isValidEmail($email)) {
+            $this->renderForgotPasswordWithError($email);
+            return;
+        }
+
+        $this->handlePasswordRecoveryRequest($email);
+    }
+
+    private function isValidEmail(string $email): bool
+    {
+        return !empty($email) && filter_var($email, FILTER_VALIDATE_EMAIL);
+    }
+
+    private function renderForgotPasswordWithError(string $email): void
+    {
         View::render("Auth/Views/forgot", [
+            'error' => 'Por favor, forneça um e-mail válido.',
+            'email' => htmlspecialchars($email),
             'title' => 'Recuperar Senha - Painel Administrativo'
         ]);
     }
 
-    private function processarRecuperacaoSenha(): void
+    private function handlePasswordRecoveryRequest(string $email): void
     {
-        $email = $this->sanitizeEmail($_POST['email'] ?? '');
-
-        if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            View::render("Auth/Views/forgot", [
-                'error' => 'Por favor, forneça um e-mail válido.',
-                'email' => htmlspecialchars($email),
-                'title' => 'Recuperar Senha - Painel Administrativo'
-            ]);
-            return;
-        }
-
-        $token = $this->authModel->gerarTokenRecuperacao($email);
+        $token = $this->authModel->generateRecoveryToken($email);
 
         if ($token) {
-            $link = $this->gerarLinkRecuperacao($token);
+            $recoveryLink = $this->generateRecoveryLink($token);
+            $emailSent = $this->emailService->sendRecoveryEmail($email, $recoveryLink);
 
-            // Tentar enviar email
-            $emailEnviado = $this->emailService->sendRecoveryEmail($email, $link);
-
-            if ($emailEnviado) {
-                // Para desenvolvimento, mostrar links recentes
-                $latestLinks = $this->emailService->getLatestRecoveryLinks();
-
-                View::render("Auth/Views/forgot", [
-                    'success' => 'Link de redefinição gerado com sucesso! O link foi salvo para desenvolvimento.',
-                    'email' => $email,
-                    'debug_links' => $latestLinks,
-                    'title' => 'Recuperar Senha - Painel Administrativo'
-                ]);
-            } else {
-                View::render("Auth/Views/forgot", [
-                    'error' => 'Erro ao gerar link de recuperação. Tente novamente.',
-                    'email' => htmlspecialchars($email),
-                    'title' => 'Recuperar Senha - Painel Administrativo'
-                ]);
-            }
+            $this->renderRecoveryResult($email, $emailSent, $recoveryLink);
         } else {
-            // Mesmo se e-mail não existir, mostra mensagem genérica por segurança
-            View::render("Auth/Views/forgot", [
-                'success' => 'Se o e-mail existir em nosso sistema, você receberá um link de recuperação.',
-                'email' => htmlspecialchars($email),
-                'title' => 'Recuperar Senha - Painel Administrativo'
-            ]);
+            $this->renderGenericRecoveryMessage($email);
         }
     }
 
-    private function gerarLinkRecuperacao(string $token): string
+    private function generateRecoveryLink(string $token): string
     {
         $protocol = isset($_SERVER['HTTPS']) ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'];
         return "{$protocol}://{$host}/admin/resetar-senha?token={$token}";
     }
 
+    private function renderRecoveryResult(string $email, bool $emailSent, string $recoveryLink): void
+    {
+        $viewData = ['email' => $email];
+
+        if ($emailSent) {
+            $viewData['success'] = 'Link de redefinição gerado com sucesso! O link foi salvo para desenvolvimento.';
+            $viewData['debug_links'] = $this->emailService->getLatestRecoveryLinks();
+        } else {
+            $viewData['error'] = 'Erro ao gerar link de recuperação. Tente novamente.';
+        }
+
+        $viewData['title'] = 'Recuperar Senha - Painel Administrativo';
+        View::render("Auth/Views/forgot", $viewData);
+    }
+
+    private function renderGenericRecoveryMessage(string $email): void
+    {
+        View::render("Auth/Views/forgot", [
+            'success' => 'Se o e-mail existir em nosso sistema, você receberá um link de recuperação.',
+            'email' => htmlspecialchars($email),
+            'title' => 'Recuperar Senha - Painel Administrativo'
+        ]);
+    }
+
+    private function renderForgotPasswordPage(): void
+    {
+        View::render("Auth/Views/forgot", [
+            'title' => 'Recuperar Senha - Painel Administrativo'
+        ]);
+    }
+
     public function resetPassword(): void
     {
-        if (isset($_SESSION['usuario'])) {
+        if ($this->isUserLoggedIn()) {
             header("Location: /admin");
             exit;
         }
@@ -284,63 +355,77 @@ class AuthController extends Controller
             exit;
         }
 
-        $usuario = $this->authModel->validarTokenRecuperacao($token);
+        $user = $this->authModel->validateRecoveryToken($token);
 
-        if (!$usuario) {
-            View::render("Auth/Views/reset", [
-                'error' => 'Token inválido ou expirado. Solicite um novo link de recuperação.',
-                'title' => 'Token Inválido - Painel Administrativo'
-            ]);
+        if (!$user) {
+            $this->renderInvalidTokenPage();
             return;
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // CORREÇÃO: Passar apenas o ID do usuário, não o array completo
-            $this->processarRedefinicaoSenha($usuario['id'], $token);
+            $this->processPasswordReset($user['id'], $token);
             return;
         }
 
+        $this->renderPasswordResetForm($token);
+    }
+
+    private function renderInvalidTokenPage(): void
+    {
+        View::render("Auth/Views/reset", [
+            'error' => 'Token inválido ou expirado. Solicite um novo link de recuperação.',
+            'title' => 'Token Inválido - Painel Administrativo'
+        ]);
+    }
+
+    private function renderPasswordResetForm(string $token): void
+    {
         View::render("Auth/Views/reset", [
             'token' => $token,
             'title' => 'Redefinir Senha - Painel Administrativo'
         ]);
     }
 
-    // CORREÇÃO: Método recebe apenas o ID (int) em vez do array completo
-    private function processarRedefinicaoSenha(int $usuarioId, string $token): void
+    private function processPasswordReset(int $userId, string $token): void
     {
-        $senha = $_POST['senha'] ?? '';
-        $confirmar = $_POST['confirmar'] ?? '';
+        $password = $_POST['senha'] ?? '';
+        $confirmPassword = $_POST['confirmar'] ?? '';
 
-        // Validações
-        if (empty($senha) || empty($confirmar)) {
-            View::render("Auth/Views/reset", [
-                'error' => 'Preencha todos os campos.',
-                'token' => $token,
-                'title' => 'Redefinir Senha - Painel Administrativo'
-            ]);
+        if (!$this->validatePasswordResetInput($password, $confirmPassword)) {
+            $this->renderPasswordResetWithError($token, 'Preencha todos os campos.');
             return;
         }
 
-        if ($senha !== $confirmar) {
-            View::render("Auth/Views/reset", [
-                'error' => 'As senhas não coincidem.',
-                'token' => $token,
-                'title' => 'Redefinir Senha - Painel Administrativo'
-            ]);
+        if ($password !== $confirmPassword) {
+            $this->renderPasswordResetWithError($token, 'As senhas não coincidem.');
             return;
         }
 
-        if (strlen($senha) < 6) {
-            View::render("Auth/Views/reset", [
-                'error' => 'A senha deve ter pelo menos 6 caracteres.',
-                'token' => $token,
-                'title' => 'Redefinir Senha - Painel Administrativo'
-            ]);
+        if (strlen($password) < 6) {
+            $this->renderPasswordResetWithError($token, 'A senha deve ter pelo menos 6 caracteres.');
             return;
         }
 
-        if ($this->authModel->atualizarSenha($usuarioId, $senha)) {
+        $this->executePasswordUpdate($userId, $password, $token);
+    }
+
+    private function validatePasswordResetInput(string $password, string $confirmPassword): bool
+    {
+        return !empty($password) && !empty($confirmPassword);
+    }
+
+    private function renderPasswordResetWithError(string $token, string $error): void
+    {
+        View::render("Auth/Views/reset", [
+            'error' => $error,
+            'token' => $token,
+            'title' => 'Redefinir Senha - Painel Administrativo'
+        ]);
+    }
+
+    private function executePasswordUpdate(int $userId, string $password, string $token): void
+    {
+        if ($this->authModel->updatePassword($userId, $password)) {
             View::render("Auth/Views/reset", [
                 'success' => 'Senha redefinida com sucesso! Agora você pode fazer login.',
                 'title' => 'Senha Redefinida - Painel Administrativo'
@@ -370,13 +455,5 @@ class AuthController extends Controller
             'message' => $message,
             'type' => $type
         ];
-    }
-
-    private function requireAuth(): void
-    {
-        if (!isset($_SESSION['usuario'])) {
-            header("Location: /admin/login");
-            exit;
-        }
     }
 }

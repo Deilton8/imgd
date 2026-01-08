@@ -8,46 +8,52 @@ use Exception;
 
 class User extends Model
 {
-    protected $table = "usuarios";
+    protected string $table = "usuarios";
 
-    // Constantes para evitar magic strings
-    const ROLE_ADMIN = 'admin';
-    const ROLE_EDITOR = 'editor';
-    const STATUS_ACTIVE = 'ativo';
-    const STATUS_INACTIVE = 'inativo';
+    private const ROLE_ADMIN = 'admin';
+    private const ROLE_EDITOR = 'editor';
+    private const STATUS_ACTIVE = 'ativo';
+    private const STATUS_INACTIVE = 'inativo';
+    private const DEFAULT_LIMIT = 50;
+    private const MIN_PASSWORD_LENGTH = 6;
+    private const MIN_NAME_LENGTH = 2;
 
-    public function all(int $limit = 50): array
+    public function getAll(int $limit = self::DEFAULT_LIMIT): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT id, nome, email, papel, status, criado_em 
                 FROM {$this->table} 
                 ORDER BY id DESC 
                 LIMIT :limit
-            ");
-            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-            $stmt->execute();
+            ";
 
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao buscar usuários: " . $e->getMessage());
+            $statement = $this->database->prepare($query);
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $statement->execute();
+
+            return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $exception) {
+            throw new Exception("Erro ao buscar usuários: " . $exception->getMessage());
         }
     }
 
     public function search(string $query = ''): array
     {
         try {
-            $stmt = $this->db->prepare("
+            $sql = "
                 SELECT id, nome, email, papel, status, criado_em 
                 FROM {$this->table} 
                 WHERE nome LIKE :q OR email LIKE :q 
                 ORDER BY id DESC
-            ");
-            $stmt->execute([':q' => "%{$query}%"]);
+            ";
 
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        } catch (PDOException $e) {
-            throw new Exception("Erro na busca de usuários: " . $e->getMessage());
+            $statement = $this->database->prepare($sql);
+            $statement->execute([':q' => "%{$query}%"]);
+
+            return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (PDOException $exception) {
+            throw new Exception("Erro na busca de usuários: " . $exception->getMessage());
         }
     }
 
@@ -60,118 +66,146 @@ class User extends Model
     ): array {
         try {
             $offset = max(0, ($page - 1) * $perPage);
-            $where = [];
-            $params = [];
+            $whereConditions = [];
+            $parameters = [];
 
-            // Filtros com validação
-            if (!empty($search)) {
-                $where[] = "(nome LIKE :search OR email LIKE :search)";
-                $params[':search'] = "%$search%";
-            }
+            $whereConditions = $this->buildWhereConditions($search, $role, $status, $parameters);
+            $whereSQL = $whereConditions ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
 
-            if (!empty($role) && in_array($role, [self::ROLE_ADMIN, self::ROLE_EDITOR])) {
-                $where[] = "papel = :role";
-                $params[':role'] = $role;
-            }
+            $total = $this->countTotalRecords($whereSQL, $parameters);
+            $users = $this->fetchPaginatedUsers($whereSQL, $parameters, $perPage, $offset);
 
-            if (!empty($status) && in_array($status, [self::STATUS_ACTIVE, self::STATUS_INACTIVE])) {
-                $where[] = "status = :status";
-                $params[':status'] = $status;
-            }
-
-            $whereSQL = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-
-            // Total de registros
-            $stmtTotal = $this->db->prepare("SELECT COUNT(*) FROM {$this->table} {$whereSQL}");
-            $stmtTotal->execute($params);
-            $total = (int) $stmtTotal->fetchColumn();
-
-            // Registros da página
-            $stmt = $this->db->prepare("
-                SELECT id, nome, email, papel, status, criado_em 
-                FROM {$this->table} 
-                {$whereSQL}
-                ORDER BY id DESC 
-                LIMIT :limit OFFSET :offset
-            ");
-
-            foreach ($params as $key => $val) {
-                $stmt->bindValue($key, $val);
-            }
-
-            $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-            $stmt->execute();
-
-            $lastPage = $total > 0 ? max(1, ceil($total / $perPage)) : 1;
-
-            return [
-                'data' => $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [],
-                'total' => $total,
-                'page' => $page,
-                'perPage' => $perPage,
-                'lastPage' => $lastPage,
-                'from' => $total > 0 ? $offset + 1 : 0,
-                'to' => $total > 0 ? min($offset + $perPage, $total) : 0,
-            ];
-        } catch (PDOException $e) {
-            throw new Exception("Erro na paginação de usuários: " . $e->getMessage());
+            return $this->buildPaginationResult($users, $total, $page, $perPage);
+        } catch (PDOException $exception) {
+            throw new Exception("Erro na paginação de usuários: " . $exception->getMessage());
         }
     }
 
-    public function find(int $id): ?array
+    private function buildWhereConditions(string $search, string $role, string $status, array &$parameters): array
+    {
+        $whereConditions = [];
+
+        if (!empty($search)) {
+            $whereConditions[] = "(nome LIKE :search OR email LIKE :search)";
+            $parameters[':search'] = "%$search%";
+        }
+
+        if (!empty($role) && in_array($role, [self::ROLE_ADMIN, self::ROLE_EDITOR])) {
+            $whereConditions[] = "papel = :role";
+            $parameters[':role'] = $role;
+        }
+
+        if (!empty($status) && in_array($status, [self::STATUS_ACTIVE, self::STATUS_INACTIVE])) {
+            $whereConditions[] = "status = :status";
+            $parameters[':status'] = $status;
+        }
+
+        return $whereConditions;
+    }
+
+    private function countTotalRecords(string $whereSQL, array $parameters): int
+    {
+        $query = "SELECT COUNT(*) FROM {$this->table} {$whereSQL}";
+        $statement = $this->database->prepare($query);
+        $statement->execute($parameters);
+
+        return (int) $statement->fetchColumn();
+    }
+
+    private function fetchPaginatedUsers(string $whereSQL, array $parameters, int $perPage, int $offset): array
+    {
+        $query = "
+            SELECT id, nome, email, papel, status, criado_em 
+            FROM {$this->table} 
+            {$whereSQL}
+            ORDER BY id DESC 
+            LIMIT :limit OFFSET :offset
+        ";
+
+        $statement = $this->database->prepare($query);
+
+        foreach ($parameters as $key => $value) {
+            $statement->bindValue($key, $value);
+        }
+
+        $statement->bindValue(':limit', $perPage, PDO::PARAM_INT);
+        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $statement->execute();
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private function buildPaginationResult(array $users, int $total, int $page, int $perPage): array
+    {
+        $lastPage = $total > 0 ? max(1, ceil($total / $perPage)) : 1;
+
+        return [
+            'data' => $users,
+            'total' => $total,
+            'page' => $page,
+            'perPage' => $perPage,
+            'lastPage' => $lastPage,
+            'from' => $total > 0 ? (($page - 1) * $perPage) + 1 : 0,
+            'to' => $total > 0 ? min(($page * $perPage), $total) : 0,
+        ];
+    }
+
+    public function findatabaseyId(int $id): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT id, nome, email, papel, status, criado_em, atualizado_em 
                 FROM {$this->table} 
                 WHERE id = ?
-            ");
-            $stmt->execute([$id]);
+            ";
 
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $statement = $this->database->prepare($query);
+            $statement->execute([$id]);
+
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
             return $result ?: null;
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao buscar usuário: " . $e->getMessage());
+        } catch (PDOException $exception) {
+            throw new Exception("Erro ao buscar usuário: " . $exception->getMessage());
         }
     }
 
     public function emailExists(string $email, ?int $excludeId = null): bool
     {
         try {
-            $sql = "SELECT COUNT(*) FROM {$this->table} WHERE email = :email";
-            $params = [':email' => $email];
+            $query = "SELECT COUNT(*) FROM {$this->table} WHERE email = :email";
+            $parameters = [':email' => $email];
 
             if ($excludeId) {
-                $sql .= " AND id != :id";
-                $params[':id'] = $excludeId;
+                $query .= " AND id != :id";
+                $parameters[':id'] = $excludeId;
             }
 
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute($params);
+            $statement = $this->database->prepare($query);
+            $statement->execute($parameters);
 
-            return $stmt->fetchColumn() > 0;
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao verificar email: " . $e->getMessage());
+            return $statement->fetchColumn() > 0;
+        } catch (PDOException $exception) {
+            throw new Exception("Erro ao verificar email: " . $exception->getMessage());
         }
     }
 
     public function create(array $data): bool
     {
         try {
-            $this->validateUserData($data);
+            $this->validateUserData($data, true);
 
             if ($this->emailExists($data['email'])) {
                 throw new Exception("O e-mail informado já está em uso.");
             }
 
-            $stmt = $this->db->prepare("
+            $query = "
                 INSERT INTO {$this->table} 
                 (nome, email, senha, papel, status, criado_em) 
                 VALUES (:nome, :email, :senha, :papel, :status, NOW())
-            ");
+            ";
 
-            $result = $stmt->execute([
+            $statement = $this->database->prepare($query);
+            $result = $statement->execute([
                 ':nome' => trim($data['nome']),
                 ':email' => trim($data['email']),
                 ':senha' => password_hash($data['senha'], PASSWORD_BCRYPT),
@@ -184,63 +218,77 @@ class User extends Model
             }
 
             return true;
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao criar usuário: " . $e->getMessage());
+        } catch (PDOException $exception) {
+            throw new Exception("Erro ao criar usuário: " . $exception->getMessage());
         }
     }
 
     public function update(int $id, array $data): bool
     {
         try {
-            $this->validateUserData($data, false); // false para não exigir senha
+            $this->validateUserData($data, false);
 
             if ($this->emailExists($data['email'], $id)) {
                 throw new Exception("O e-mail informado já está em uso por outro usuário.");
             }
 
-            $user = $this->find($id);
+            $user = $this->findatabaseyId($id);
             if (!$user) {
                 throw new Exception("Usuário não encontrado.");
             }
 
-            $query = "
-                UPDATE {$this->table} 
-                SET nome = :nome, email = :email, papel = :papel, 
-                    status = :status, atualizado_em = NOW()
-            ";
-
-            $params = [
-                ':nome' => trim($data['nome']),
-                ':email' => trim($data['email']),
-                ':papel' => $data['papel'],
-                ':status' => $data['status'],
-                ':id' => $id
-            ];
-
-            if (!empty($data['senha'])) {
-                $query .= ", senha = :senha";
-                $params[':senha'] = password_hash($data['senha'], PASSWORD_BCRYPT);
-            }
-
-            $query .= " WHERE id = :id";
-
-            $stmt = $this->db->prepare($query);
-            $result = $stmt->execute($params);
+            $updateData = $this->buildUpdateData($data, $id);
+            $result = $this->executeUpdate($updateData);
 
             if (!$result) {
                 throw new Exception("Erro ao atualizar usuário no banco de dados.");
             }
 
             return true;
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao atualizar usuário: " . $e->getMessage());
+        } catch (PDOException $exception) {
+            throw new Exception("Erro ao atualizar usuário: " . $exception->getMessage());
         }
+    }
+
+    private function buildUpdateData(array $data, int $id): array
+    {
+        $updateData = [
+            ':nome' => trim($data['nome']),
+            ':email' => trim($data['email']),
+            ':papel' => $data['papel'],
+            ':status' => $data['status'],
+            ':id' => $id
+        ];
+
+        if (!empty($data['senha'])) {
+            $updateData[':senha'] = password_hash($data['senha'], PASSWORD_BCRYPT);
+        }
+
+        return $updateData;
+    }
+
+    private function executeUpdate(array $updateData): bool
+    {
+        $query = "
+            UPDATE {$this->table} 
+            SET nome = :nome, email = :email, papel = :papel, 
+                status = :status, atualizado_em = NOW()
+        ";
+
+        if (isset($updateData[':senha'])) {
+            $query .= ", senha = :senha";
+        }
+
+        $query .= " WHERE id = :id";
+
+        $statement = $this->database->prepare($query);
+        return $statement->execute($updateData);
     }
 
     public function toggleStatus(int $id): bool
     {
         try {
-            $user = $this->find($id);
+            $user = $this->findatabaseyId($id);
             if (!$user) {
                 throw new Exception("Usuário não encontrado.");
             }
@@ -249,56 +297,53 @@ class User extends Model
                 ? self::STATUS_INACTIVE
                 : self::STATUS_ACTIVE;
 
-            $stmt = $this->db->prepare("
+            $query = "
                 UPDATE {$this->table} 
                 SET status = :status, atualizado_em = NOW() 
                 WHERE id = :id
-            ");
+            ";
 
-            return $stmt->execute([
+            $statement = $this->database->prepare($query);
+            return $statement->execute([
                 ':status' => $newStatus,
                 ':id' => $id
             ]);
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao alterar status do usuário: " . $e->getMessage());
+        } catch (PDOException $exception) {
+            throw new Exception("Erro ao alterar status do usuário: " . $exception->getMessage());
         }
     }
 
     public function delete(int $id): bool
     {
         try {
-            $user = $this->find($id);
+            $user = $this->findatabaseyId($id);
             if (!$user) {
                 throw new Exception("Usuário não encontrado.");
             }
 
-            // Impedir que o usuário exclua a si mesmo
             if (isset($_SESSION['usuario']['id']) && $_SESSION['usuario']['id'] == $id) {
                 throw new Exception("Você não pode excluir sua própria conta.");
             }
 
-            $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id = ?");
-            return $stmt->execute([$id]);
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao excluir usuário: " . $e->getMessage());
+            $statement = $this->database->prepare("DELETE FROM {$this->table} WHERE id = ?");
+            return $statement->execute([$id]);
+        } catch (PDOException $exception) {
+            throw new Exception("Erro ao excluir usuário: " . $exception->getMessage());
         }
     }
 
-    /**
-     * Valida dados do usuário
-     */
-    private function validateUserData(array $data, bool $requirePassword = true): void
+    private function validateUserData(array $data, bool $requirePassword): void
     {
-        if (empty($data['nome']) || strlen(trim($data['nome'])) < 2) {
-            throw new Exception("Nome deve ter pelo menos 2 caracteres.");
+        if (empty($data['nome']) || strlen(trim($data['nome'])) < self::MIN_NAME_LENGTH) {
+            throw new Exception("Nome deve ter pelo menos " . self::MIN_NAME_LENGTH . " caracteres.");
         }
 
         if (empty($data['email']) || !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
             throw new Exception("E-mail inválido.");
         }
 
-        if ($requirePassword && (empty($data['senha']) || strlen($data['senha']) < 6)) {
-            throw new Exception("Senha deve ter pelo menos 6 caracteres.");
+        if ($requirePassword && (empty($data['senha']) || strlen($data['senha']) < self::MIN_PASSWORD_LENGTH)) {
+            throw new Exception("Senha deve ter pelo menos " . self::MIN_PASSWORD_LENGTH . " caracteres.");
         }
 
         $allowedRoles = [self::ROLE_ADMIN, self::ROLE_EDITOR];
@@ -312,23 +357,22 @@ class User extends Model
         }
     }
 
-    /**
-     * Busca usuário por email (útil para login)
-     */
-    public function findByEmail(string $email): ?array
+    public function findatabaseyEmail(string $email): ?array
     {
         try {
-            $stmt = $this->db->prepare("
+            $query = "
                 SELECT id, nome, email, senha, papel, status 
                 FROM {$this->table} 
                 WHERE email = ? AND status = :active
-            ");
-            $stmt->execute([$email, ':active' => self::STATUS_ACTIVE]);
+            ";
 
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $statement = $this->database->prepare($query);
+            $statement->execute([$email, ':active' => self::STATUS_ACTIVE]);
+
+            $result = $statement->fetch(PDO::FETCH_ASSOC);
             return $result ?: null;
-        } catch (PDOException $e) {
-            throw new Exception("Erro ao buscar usuário por email: " . $e->getMessage());
+        } catch (PDOException $exception) {
+            throw new Exception("Erro ao buscar usuário por email: " . $exception->getMessage());
         }
     }
 }
