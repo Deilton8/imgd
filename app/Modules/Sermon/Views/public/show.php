@@ -117,39 +117,48 @@ $nomes = [
 <nav class="bg-white/95 backdrop-blur-sm py-4 border-b border-yellow-100 shadow-sm sticky top-0 z-40"
     aria-label="Navegação">
     <div class="container mx-auto px-4">
-        <ol class="flex items-center space-x-3 text-sm">
-            <li>
+        <ol class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+            <!-- Início -->
+            <li class="flex items-center">
                 <a href="/"
                     class="flex items-center text-gray-600 hover:text-yellow-600 transition-all duration-300 group"
                     aria-label="Ir para início">
                     <div
-                        class="w-8 h-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                        class="w-8 h-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg flex items-center justify-center mr-2 group-hover:scale-110 transition-transform shrink-0">
                         <i class="fas fa-home text-yellow-500 text-sm"></i>
                     </div>
                     <span class="font-medium">Início</span>
                 </a>
             </li>
-            <li class="flex items-center text-gray-400">
-                <i class="fas fa-chevron-right text-xs mx-2"></i>
+
+            <!-- Separador -->
+            <li class="flex items-center text-gray-400 shrink-0">
+                <i class="fas fa-chevron-right text-xs mr-4"></i>
             </li>
-            <li>
+
+            <!-- Mensagens -->
+            <li class="flex items-center">
                 <a href="/sermoes"
                     class="flex items-center text-gray-600 hover:text-yellow-600 transition-all duration-300 group"
                     aria-label="Ir para mensagens">
                     <div
-                        class="w-8 h-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                        class="w-8 h-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg flex items-center justify-center mr-2 group-hover:scale-110 transition-transform shrink-0">
                         <i class="fas fa-bible text-yellow-500 text-sm"></i>
                     </div>
                     <span class="font-medium">Mensagens</span>
                 </a>
             </li>
-            <li class="flex items-center text-gray-400">
-                <i class="fas fa-chevron-right text-xs mx-2"></i>
+
+            <!-- Separador -->
+            <li class="flex items-center text-gray-400 shrink-0">
+                <i class="fas fa-chevron-right text-xs mr-4"></i>
             </li>
-            <li class="flex items-center">
-                <span class="text-gray-900 font-semibold truncate max-w-xs md:max-w-md flex items-center">
-                    <i class="fas fa-star text-yellow-500 mr-2"></i>
-                    <?= htmlspecialchars($sermao['titulo']) ?>
+
+            <!-- Título atual -->
+            <li class="min-w-0 flex-1">
+                <span class="text-gray-900 font-semibold flex items-center min-w-0">
+                    <i class="fas fa-star text-yellow-500 mr-2 shrink-0"></i>
+                    <span class="truncate"><?= htmlspecialchars($sermao['titulo']) ?></span>
                 </span>
             </li>
         </ol>
