@@ -361,7 +361,7 @@ ob_start();
                             Não há mensagens disponíveis no momento. Estamos preparando sermões inspiradores para você!
                         </p>
                         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a href="/contacto"
+                            <a href="/contato"
                                 class="inline-flex items-center justify-center bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white px-8 py-3.5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl group">
                                 <i class="fas fa-envelope mr-3 text-lg group-hover:scale-110 transition-transform"></i>
                                 Contactar Igreja
