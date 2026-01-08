@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,6 +18,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         crossorigin="anonymous">
+
+    <!-- Swiper -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" crossorigin="anonymous">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -51,9 +55,54 @@
     <!-- Alpine.js -->
     <script src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js" defer></script>
 
+    <!-- Swiper -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js" crossorigin="anonymous"></script>
+
     <!-- Custom Scripts -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.swiper-container').forEach(function (swiperEl) {
+                new Swiper(swiperEl, {
+                    loop: true,
+                    speed: 600,
+                    autoplay: {
+                        delay: 5000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                    },
+                    pagination: {
+                        el: swiperEl.querySelector('.swiper-pagination'),
+                        clickable: true,
+                        dynamicBullets: true,
+                    },
+                    navigation: {
+                        nextEl: swiperEl.querySelector('.swiper-button-next'),
+                        prevEl: swiperEl.querySelector('.swiper-button-prev'),
+                    },
+                    breakpoints: {
+                        320: {
+                            slidesPerView: 1,
+                            spaceBetween: 20
+                        },
+                        768: {
+                            slidesPerView: 2,
+                            spaceBetween: 30
+                        },
+                        1024: {
+                            slidesPerView: 3,
+                            spaceBetween: 40
+                        }
+                    },
+                    a11y: {
+                        prevSlideMessage: 'Slide anterior',
+                        nextSlideMessage: 'Próximo slide',
+                        firstSlideMessage: 'Este é o primeiro slide',
+                        lastSlideMessage: 'Este é o último slide',
+                        paginationBulletMessage: 'Ir para slide {{index}}',
+                    }
+                });
+            });
+
             // Back to top button
             const backToTop = document.createElement('button');
             backToTop.innerHTML = '<i class="fas fa-chevron-up"></i>';
@@ -72,4 +121,5 @@
         });
     </script>
 </body>
+
 </html>
