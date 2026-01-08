@@ -457,7 +457,7 @@ $nomes = [
                                     <div class="bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
                                         <div class="flex items-center space-x-3">
                                             <span class="text-white font-medium text-sm"
-                                                x-text="currentItem.descricao || 'Arquivo do sermão'"></span>
+                                                x-text="currentItem.descricao || 'Arquivo'"></span>
                                             <span class="text-gray-300 text-xs">
                                                 <span x-text="currentIndex + 1"></span>/<span x-text="items.length"></span>
                                             </span>
