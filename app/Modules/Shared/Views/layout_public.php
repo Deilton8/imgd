@@ -307,23 +307,6 @@
 </head>
 
 <body class="bg-gradient-to-b from-gray-50 to-white text-gray-900 antialiased min-h-screen flex flex-col">
-    <!-- Loading screen -->
-    <div id="loading-screen"
-        class="fixed inset-0 bg-white z-[100] flex items-center justify-center transition-opacity duration-300">
-        <div class="text-center">
-            <div class="w-40 h-40 mx-auto mb-6 relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full animate-ping">
-                </div>
-                <div class="relative w-40 h-40 flex items-center justify-center">
-                    <img src="/assets/img/logo.png" alt="IMGD - Igreja Ministério da Graça de Deus"
-                        class="h-full w-full object-cover">
-                </div>
-            </div>
-            <div class="text-xl font-bold text-yellow-500 animate-pulse">Igreja Ministério da Graça de Deus</div>
-            <div class="text-sm text-gray-500 mt-2">Carregando...</div>
-        </div>
-    </div>
-
     <!-- Skip to main content link -->
     <a href="#main-content"
         class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-[100] bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold transition-transform transform focus:scale-105">
@@ -353,19 +336,6 @@
 
     <!-- Custom Scripts -->
     <script>
-        // Remove loading screen
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const loadingScreen = document.getElementById('loading-screen');
-                if (loadingScreen) {
-                    loadingScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                    }, 300);
-                }
-            }, 300);
-        });
-
         // Initialize Swiper
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize all Swiper instances
