@@ -242,7 +242,7 @@ ob_start();
                                             <?php elseif ($m['tipo_arquivo'] === 'video'): ?>
                                                 <video
                                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                    muted loop playsinline autoplay>
+                                                    muted loop autoplay>
                                                     <source src="/<?= $m['caminho_arquivo'] ?>" type="<?= $m['tipo_mime'] ?>">
                                                 </video>
                                             <?php else: ?>
@@ -371,8 +371,8 @@ ob_start();
                                         <div
                                             class="absolute -inset-4 bg-gradient-to-r from-purple-400/20 via-transparent to-pink-400/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                                         </div>
-                                        <video controls autoplay class="relative rounded-xl shadow-2xl w-full max-h-[85vh]"
-                                            x-ref="videoPlayer">
+                                        <video controls autoplay muted
+                                            class="relative rounded-xl shadow-2xl w-full max-h-[85vh]" x-ref="videoPlayer">
                                             <source :src="'/' + currentItem.caminho_arquivo" :type="currentItem.tipo_mime">
                                         </video>
                                     </div>
