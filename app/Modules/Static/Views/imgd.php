@@ -403,17 +403,17 @@ ob_start();
                                         </div>
 
                                         <div class="flex items-start space-x-4">
-                                            <i class="fas fa-phone-alt text-yellow-500 text-xl mt-1"></i>
+                                            <i class="fas fa-envelope text-yellow-500 text-xl mt-1"></i>
                                             <div>
-                                                <h4 class="font-semibold text-gray-800 mb-1">Contato</h4>
+                                                <h4 class="font-semibold text-gray-800 mb-1">Emails</h4>
                                                 <p class="text-gray-600">
                                                     <a href="tel:+258841234567"
                                                         class="hover:text-yellow-600 transition-colors">
-                                                        +258 84 123 4567
+                                                        parceiros@imgd.org.mz
                                                     </a><br>
                                                     <a href="mailto:contato@imgd.org"
                                                         class="hover:text-yellow-600 transition-colors">
-                                                        info@imgd.org
+                                                        info@imgd.org.mz
                                                     </a>
                                                 </p>
                                             </div>
