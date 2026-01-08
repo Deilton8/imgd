@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
@@ -278,8 +278,8 @@
             strengthBar.style.width = width;
             strengthText.textContent = text;
             strengthText.className = `text-xs font-medium ${color === 'bg-red-500' ? 'text-red-600' :
-                    color === 'bg-yellow-500' ? 'text-yellow-600' :
-                        color === 'bg-blue-500' ? 'text-blue-600' : 'text-green-600'
+                color === 'bg-yellow-500' ? 'text-yellow-600' :
+                    color === 'bg-blue-500' ? 'text-blue-600' : 'text-green-600'
                 }`;
         }
 

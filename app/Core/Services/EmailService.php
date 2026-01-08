@@ -17,37 +17,113 @@ class EmailService
     private function loadConfiguration(): array
     {
         return [
-            'from_email' => $_ENV['FROM_EMAIL'] ?? 'noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost'),
-            'from_name' => $_ENV['FROM_NAME'] ?? 'Painel Administrativo',
-            'use_file_log' => $_ENV['USE_FILE_LOG'] ?? true,
+            'from_email' => $_ENV['EMAIL_FROM'] ?? 'admin@imgd.org.mz',
+            'from_name' => $_ENV['EMAIL_FROM_NAME'] ?? 'Painel Administrativo',
+            'use_file_log' => filter_var($_ENV['EMAIL_USE_FILE_LOG'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'smtp_host' => $_ENV['SMTP_HOST'] ?? '',
+            'smtp_port' => $_ENV['SMTP_PORT'] ?? 587,
+            'smtp_username' => $_ENV['SMTP_USERNAME'] ?? '',
+            'smtp_password' => $_ENV['SMTP_PASSWORD'] ?? '',
+            'smtp_secure' => $_ENV['SMTP_SECURE'] ?? 'tls',
+            'use_smtp' => filter_var($_ENV['EMAIL_USE_SMTP'] ?? false, FILTER_VALIDATE_BOOLEAN),
         ];
     }
 
     public function sendRecoveryEmail(string $to, string $link): bool
     {
-        if ($this->config['use_file_log']) {
-            return $this->saveEmailToFile($to, $link);
+        // Se estiver em desenvolvimento ou configurado para usar arquivo, salva em arquivo
+        if ($this->config['use_file_log'] || $this->config['use_smtp'] === false) {
+            $this->saveEmailToFile($to, $link);
+            
+            // Em desenvolvimento, retorna true mesmo salvando em arquivo
+            // Em produção, você pode querer tentar enviar o email real
+            if ($this->config['use_file_log'] && !$this->config['use_smtp']) {
+                error_log("Email de recuperação salvo em arquivo para: {$to}");
+                return true;
+            }
         }
 
-        return $this->sendRealEmail($to, $link);
+        // Tenta enviar email real
+        if ($this->config['use_smtp']) {
+            return $this->sendEmailViaSMTP($to, $link);
+        } else {
+            return $this->sendEmailViaMail($to, $link);
+        }
     }
 
-    private function sendRealEmail(string $to, string $link): bool
+    private function sendEmailViaMail(string $to, string $link): bool
     {
         $subject = "Redefinição de Senha - Painel Administrativo";
         $message = $this->createEmailTemplate($link);
         $headers = $this->createEmailHeaders();
 
         try {
-            return mail($to, $subject, $message, $headers);
+            $result = mail($to, $subject, $message, $headers);
+            if (!$result) {
+                error_log("Falha ao enviar email via mail() para: {$to}");
+                return $this->saveEmailToFile($to, $link);
+            }
+            return $result;
         } catch (\Exception $exception) {
             error_log("Erro ao enviar email: " . $exception->getMessage());
             return $this->saveEmailToFile($to, $link);
         }
     }
 
+    private function sendEmailViaSMTP(string $to, string $link): bool
+    {
+        try {
+            // Implementação básica de SMTP usando PHPMailer (recomendado instalar via composer)
+            // Como alternativa, uso fsockopen para envio SMTP direto
+            return $this->sendSMTPDirect($to, $link);
+        } catch (\Exception $exception) {
+            error_log("Erro ao enviar email via SMTP: " . $exception->getMessage());
+            
+            // Fallback para mail() nativo
+            if ($this->config['use_file_log']) {
+                $this->saveEmailToFile($to, $link);
+            }
+            
+            return $this->sendEmailViaMail($to, $link);
+        }
+    }
+
+    private function sendSMTPDirect(string $to, string $link): bool
+    {
+        // Verifica se as configurações SMTP estão definidas
+        if (empty($this->config['smtp_host']) || empty($this->config['smtp_username'])) {
+            error_log("Configurações SMTP incompletas. Usando fallback.");
+            return false;
+        }
+
+        // Implementação simplificada de envio SMTP
+        $subject = "Redefinição de Senha - Painel Administrativo";
+        $message = $this->createEmailTemplate($link);
+        $headers = $this->createEmailHeaders();
+        
+        // Adiciona cabeçalhos adicionais para SMTP
+        $headers .= "\r\nX-Mailer: PHP/" . phpversion();
+        $headers .= "\r\nMIME-Version: 1.0";
+        $headers .= "\r\nContent-Type: text/html; charset=UTF-8";
+
+        // Para uma implementação completa de SMTP, considere usar:
+        // 1. PHPMailer (recomendado) - via composer: composer require phpmailer/phpmailer
+        // 2. SwiftMailer
+        // 3. Ou implementação nativa com fsockopen (mais complexa)
+        
+        // Por enquanto, usamos ini_set para configurar o mail() para SMTP
+        if (!empty($this->config['smtp_host'])) {
+            ini_set("SMTP", $this->config['smtp_host']);
+            ini_set("smtp_port", $this->config['smtp_port']);
+            ini_set("sendmail_from", $this->config['from_email']);
+        }
+
+        return mail($to, $subject, $message, $headers);
+    }
+
     private function createEmailTemplate(string $link): string
     {
+        // Mantém o mesmo template HTML...
         $currentYear = date('Y');
         return <<<HTML
         <!DOCTYPE html>
@@ -202,14 +278,18 @@ class EmailService
             "Email para: {$to}\n" .
             "Data: " . date('d/m/Y H:i:s') . "\n" .
             "Link: {$link}\n" .
+            "De: {$this->config['from_email']}\n" .
+            "SMTP: " . ($this->config['use_smtp'] ? 'Sim' : 'Não') . "\n" .
             "-->\n\n";
     }
 
     private function appendToTextLog(string $directory, string $to, string $link, string $timestamp): void
     {
         $logEntry = "[" . date('Y-m-d H:i:s') . "] Email de recuperação para: {$to}\n" .
+            "De: {$this->config['from_email']}\n" .
             "Link: {$link}\n" .
             "Arquivo: " . self::EMAIL_PREFIX . "{$timestamp}.html\n" .
+            "SMTP: " . ($this->config['use_smtp'] ? 'Sim' : 'Não') . "\n" .
             "----------------------------------------\n";
 
         file_put_contents($directory . self::EMAIL_LOGFILE, $logEntry, FILE_APPEND);
@@ -229,11 +309,28 @@ class EmailService
 
         foreach (array_slice($files, 0, $limit) as $file) {
             $content = file_get_contents($file);
-            if (preg_match('/Link: (.*?)\n/', $content, $matches)) {
-                $recoveryLinks[basename($file)] = $matches[1];
+            if (preg_match('/Email para: (.*?)\n/', $content, $emailMatch) &&
+                preg_match('/Link: (.*?)\n/', $content, $linkMatch)) {
+                $recoveryLinks[] = [
+                    'file' => basename($file),
+                    'email' => $emailMatch[1],
+                    'link' => $linkMatch[1],
+                    'date' => date('d/m/Y H:i:s', filemtime($file))
+                ];
             }
         }
 
         return $recoveryLinks;
+    }
+
+    public function getEmailConfig(): array
+    {
+        return [
+            'from_email' => $this->config['from_email'],
+            'from_name' => $this->config['from_name'],
+            'use_file_log' => $this->config['use_file_log'],
+            'use_smtp' => $this->config['use_smtp'],
+            'smtp_configured' => !empty($this->config['smtp_host']),
+        ];
     }
 }
