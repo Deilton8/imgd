@@ -6,9 +6,9 @@ class Config
     private const SETTINGS = [
         "db_host" => "localhost",
         "db_port" => "3307",
-        "db_name" => "igreja",
-        "db_user" => "root",
-        "db_pass" => ""
+        "db_name" => "imgdorgm_igreja",
+        "db_user" => "imgdorgm_imgd",
+        "db_pass" => "Ministerio@2007"
     ];
 
     /**
