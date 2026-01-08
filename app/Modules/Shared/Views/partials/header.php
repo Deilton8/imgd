@@ -174,7 +174,7 @@
 
                 <!-- Contacto -->
                 <li>
-                    <a href="/contacto"
+                    <a href="/contato"
                         class="flex items-center space-x-4 p-4 bg-white/5 hover:bg-white/10 focus:bg-white/10 focus:outline-none transition-all duration-300 rounded-xl group"
                         role="menuitem">
                         <div
@@ -182,7 +182,7 @@
                             <i class="fas fa-envelope text-yellow-500"></i>
                         </div>
                         <span
-                            class="text-black font-medium group-hover:text-yellow-500 transition-colors">Contacto</span>
+                            class="text-black font-medium group-hover:text-yellow-500 transition-colors">Contato</span>
                     </a>
                 </li>
             </ul>

@@ -252,11 +252,11 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
                                 </a>
                             </li>
                             <li>
-                                <a href="/contacto"
+                                <a href="/contato"
                                     class="group flex items-center text-gray-300 hover:text-yellow-400 transition-all duration-300 py-2">
                                     <i
                                         class="fas fa-chevron-right text-yellow-500 text-xs mr-3 group-hover:translate-x-1 transition-transform"></i>
-                                    <span>Contacto</span>
+                                    <span>Contato</span>
                                 </a>
                             </li>
                         </ul>

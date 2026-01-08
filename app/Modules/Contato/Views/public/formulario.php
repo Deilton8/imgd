@@ -1,3 +1,79 @@
+<?php
+ob_start();
+
+// Recupera dados da URL
+$flashData = $_GET['flash'] ?? null;
+$formData = $_GET['form_data'] ?? null;
+
+$flashMessage = null;
+$old = [];
+
+if ($flashData) {
+    $decoded = json_decode(base64_decode($flashData), true);
+    if ($decoded) {
+        $flashMessage = $decoded;
+    }
+}
+
+if ($formData) {
+    $decoded = json_decode(base64_decode($formData), true);
+    if ($decoded) {
+        $old = $decoded;
+    }
+}
+?>
+
+<!-- Page Header com gradiente melhorado -->
+<section class="relative bg-gradient-to-br from-yellow-800 via-yellow-700 to-yellow-600 py-20 text-white" role="banner">
+    <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="max-w-4xl mx-auto text-center space-y-4">
+            <div class="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+                <i class="fas fa-envelope text-yellow-300"></i>
+                <span class="text-sm font-semibold">Fale Conosco</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 leading-tight tracking-tight">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 to-yellow-100">
+                    Contacto
+                </span>
+            </h1>
+            <p class="text-xl md:text-2xl text-yellow-100 font-light max-w-3xl mx-auto">
+                Entre em contacto com a nossa comunidade de fé e amor
+            </p>
+        </div>
+    </div>
+    <!-- Elemento decorativo -->
+    <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent"></div>
+</section>
+
+<!-- Breadcrumb melhorado -->
+<nav class="bg-white/95 backdrop-blur-sm py-4 border-b border-yellow-100 shadow-sm" aria-label="Navegação">
+    <div class="container mx-auto px-4">
+        <ol class="flex items-center space-x-3 text-sm">
+            <li>
+                <a href="/"
+                    class="flex items-center text-gray-600 hover:text-yellow-600 transition-all duration-300 group"
+                    aria-label="Ir para início">
+                    <div
+                        class="w-8 h-8 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-home text-yellow-500 text-sm"></i>
+                    </div>
+                    <span class="font-medium">Início</span>
+                </a>
+            </li>
+            <li class="flex items-center text-gray-400">
+                <i class="fas fa-chevron-right text-xs mx-2"></i>
+            </li>
+            <li class="flex items-center">
+                <span class="text-gray-900 font-semibold flex items-center">
+                    <i class="fas fa-envelope-open-text text-yellow-500 mr-2"></i>
+                    Contacto
+                </span>
+            </li>
+        </ol>
+    </div>
+</nav>
+
 <!-- Contacto -->
 <section id="contact" class="py-16 bg-white" aria-labelledby="contacto-titulo">
     <div class="container mx-auto px-4">
@@ -5,6 +81,30 @@
             <h2 id="contacto-titulo" class="text-3xl md:text-4xl font-bold text-yellow-900 mb-4">Entre em Contacto</h2>
             <div class="w-20 h-1 bg-yellow-600 mx-auto mt-6"></div>
         </header>
+
+        <!-- Notificação Flash -->
+        <?php if ($flashMessage): ?>
+            <div x-data="{ show: true }" x-show="show" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform -translate-y-2"
+                x-transition:enter-end="opacity-100 transform translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform translate-y-0"
+                x-transition:leave-end="opacity-0 transform -translate-y-2"
+                class="max-w-4xl mx-auto mb-8 p-4 rounded-2xl border-l-4 <?= $flashMessage['type'] === 'error' ? 'bg-red-50 border-red-400 text-red-700' : 'bg-green-50 border-green-400 text-green-700' ?>">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span class="text-lg"><?= $flashMessage['type'] === 'error' ? '❌' : '✅' ?></span>
+                        <p class="font-medium"><?= htmlspecialchars($flashMessage['message']) ?></p>
+                    </div>
+                    <button @click="show = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <div class="flex flex-col lg:flex-row gap-8">
             <!-- Formulário -->
@@ -122,10 +222,35 @@
                         </div>
                     </form>
                 </div>
+
+                <!-- Informações Importantes -->
+                <div class="mt-6 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 border border-yellow-200">
+                    <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Informações Importantes
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-start gap-2">
+                            <span class="text-yellow-500 mt-1">✓</span>
+                            <span>Respondemos em até 24 horas úteis</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-yellow-500 mt-1">✓</span>
+                            <span>Para assuntos urgentes, utilize nosso telefone</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-yellow-500 mt-1">✓</span>
+                            <span>Verifique sua caixa de spam caso não receba nossa resposta</span>
+                        </li>
+                    </ul>
+                </div>
             </div>
 
             <!-- Informações de contacto -->
-            <div class="lg:w-1/2">
+            <div class="lg:w-1/2 space-y-8">
                 <div class="bg-white p-6 rounded-xl shadow-md h-full space-y-8">
                     <h3 class="text-2xl font-bold text-yellow-900 mb-6">Informações de Contacto</h3>
 
@@ -178,6 +303,16 @@
                                     </a>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Mapa -->
+                        <div class="w-full h-96 rounded-lg overflow-hidden shadow-lg">
+                            <iframe
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3569.706080704633!2d32.46518553243779!3d-25.924982648049895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1ee68fa9b6a8f893%3A0x82df5cea77af3550!2sIgreja%20Minist%C3%A9rio%20Da%20Gra%C3%A7a%20de%20Deus%20(IMGD)!5e0!3m2!1spt-PT!2smz!4v1755854650257!5m2!1spt-PT!2smz"
+                                class="w-full h-full border-0" allowfullscreen loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                title="Localização da Igreja Ministério da Graça de Deus">
+                            </iframe>
                         </div>
                     </div>
                 </div>
@@ -256,3 +391,8 @@
         }
     }
 </script>
+
+<?php
+$content = ob_get_clean();
+include __DIR__ . "/../../../Shared/Views/layout_public.php";
+?>

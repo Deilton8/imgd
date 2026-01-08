@@ -47,6 +47,7 @@ function defineRoutes(Router $router)
     defineEventRoutes($router);
     definePublicationRoutes($router);
     defineSermonRoutes($router);
+    defineContatoRoutes($router);
 }
 
 /**
@@ -166,4 +167,19 @@ function defineSermonRoutes(Router $router)
     // Público
     $router->get('/sermoes', 'Sermon\\Controllers\\PublicSermonController@index');
     $router->get('/sermao/{slug}', 'Sermon\\Controllers\\PublicSermonController@show');
+}
+
+/**
+ * Rotas de contato
+ */
+function defineContatoRoutes(Router $router)
+{
+    // Admin
+    $router->get('/admin/contato', 'Contato\\Controllers\\ContatoController@index');
+    $router->get('/admin/contato/{id}', 'Contato\\Controllers\\ContatoController@show');
+    $router->get('/admin/contato/{id}/deletar', 'Contato\\Controllers\\ContatoController@delete');
+
+    // Público
+    $router->get('/contato', 'Contato\\Controllers\\ContatoPublicController@index');
+    $router->post('/contato', 'Contato\\Controllers\\ContatoPublicController@create');
 }

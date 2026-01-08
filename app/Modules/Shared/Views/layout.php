@@ -153,6 +153,7 @@
                 'publicacoes' => ['icon' => '📝', 'label' => 'Publicações', 'href' => '/admin/publicacoes'],
                 'sermoes' => ['icon' => '📖', 'label' => 'Sermões', 'href' => '/admin/sermoes'],
                 'usuarios' => ['icon' => '👥', 'label' => 'Usuários', 'href' => '/admin/usuarios'],
+                'contato' => ['icon' => '✉️', 'label' => 'Contato', 'href' => '/admin/contato'],
             ];
 
             foreach ($menuItems as $key => $item):
