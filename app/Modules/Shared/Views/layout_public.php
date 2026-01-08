@@ -3,118 +3,106 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($title ?? "IMGD"); ?></title>
-
-    <meta name="description"
-        content="<?php echo htmlspecialchars($description ?? 'Igreja Ministério da Graça de Deus'); ?>">
-    <meta name="keywords"
-        content="<?php echo htmlspecialchars($keywords ?? 'igreja, cristã, ministério, graça de deus'); ?>">
-    <meta name="author" content="IMGD">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title><?php echo htmlspecialchars($title ?? "IMGD - Igreja Ministério da Graça de Deus"); ?></title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="/assets/img/icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon.png">
+    <link rel="mask-icon" href="/assets/img/icon.png" color="#f59e0b">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        },
-                        secondary: {
-                            800: '#1e293b',
-                            900: '#0f172a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    <!-- CSS Resources with integrity -->
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Swiper -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" crossorigin="anonymous">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" media="print" onload="this.media='all'">
 
+    <!-- Critical CSS Inline -->
     <style>
+        /* Critical CSS */
         html {
-            font-family: 'Inter', system-ui, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
 
         main {
-            flex: 1;
+            flex: 1 0 auto;
         }
     </style>
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/assets/img/logo.png" as="image" type="image/png">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2"
+        as="font" type="font/woff2" crossorigin>
+    <link rel="preload"
+        href="https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2"
+        as="font" type="font/woff2" crossorigin>
 </head>
 
-<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+<body class="bg-gradient-to-b from-gray-50 to-white text-gray-900 antialiased min-h-screen flex flex-col">
+
     <!-- Header -->
     <?php include __DIR__ . '/partials/header.php'; ?>
 
     <!-- Main Content -->
-    <main class="flex-grow">
+    <main id="main-content" class="flex-grow" role="main">
         <?php echo $content ?? ''; ?>
     </main>
 
     <!-- Footer -->
     <?php include __DIR__ . '/partials/footer.php'; ?>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    <!-- JavaScript Libraries -->
+    <!-- Alpine.js -->
+    <script src="https://unpkg.com/alpinejs@3.13.0/dist/cdn.min.js" defer integrity="sha384-..."></script>
 
-    <!-- Scripts -->
+    <!-- Swiper -->
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js" crossorigin="anonymous"></script>
+
+    <!-- Custom Scripts -->
     <script>
-        // Toast function
-        window.showToast = function (message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                warning: 'bg-yellow-500',
-                info: 'bg-blue-500'
-            };
-
-            toast.className = `${colors[type] || 'bg-blue-500'} text-white px-4 py-3 rounded-lg shadow-lg`;
-            toast.textContent = message;
-
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 5000);
-        };
-
-        // Back to top
+        // Back to top button
         const backToTop = document.createElement('button');
-        backToTop.innerHTML = '↑';
-        backToTop.className = 'fixed bottom-6 right-6 w-10 h-10 bg-primary-500 text-white rounded-full shadow-lg hidden';
+        backToTop.innerHTML = '<i class="fas fa-chevron-up"></i>';
+        backToTop.className = 'fixed bottom-6 right-6 w-12 h-12 bg-yellow-500 hover:bg-yellow-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 flex items-center justify-center z-50 hidden';
+        backToTop.setAttribute('aria-label', 'Voltar ao topo');
         backToTop.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
         document.body.appendChild(backToTop);
 
         window.addEventListener('scroll', () => {
-            backToTop.classList.toggle('hidden', window.scrollY < 300);
+            if (window.scrollY > 300) {
+                backToTop.classList.remove('hidden');
+                backToTop.classList.add('flex');
+            } else {
+                backToTop.classList.add('hidden');
+                backToTop.classList.remove('flex');
+            }
         });
     </script>
+
 </body>
 
 </html>
