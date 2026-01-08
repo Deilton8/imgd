@@ -286,7 +286,7 @@ $socialLinks = RecentPostsLoader::getSocialLinks();
                             <?php foreach ($recentPosts as $post): ?>
                                 <?php
                                 // Extrai o URL da imagem de forma segura
-                                $thumb = '/imagens/padrao-sem-imagem.jpg'; // Imagem padrão como fallback
+                                $thumb = 'https://via.placeholder.com/56x56/1e40af/ffffff?text=IMGD'; // Imagem padrão como fallback
                                 $altText = 'Imagem da publicação';
 
                                 // Verifica se existem mídias e se há caminho do arquivo
