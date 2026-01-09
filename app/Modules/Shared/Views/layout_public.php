@@ -1,43 +1,77 @@
 <!DOCTYPE html>
 <html lang="pt">
 
+<!-- Substituir a seção <head> atual por: -->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($title ?? "IMGD - Igreja Ministério da Graça de Deus"); ?></title>
 
-    <!-- SEO Meta Tags -->
+    <!-- Primary Meta Tags -->
+    <title><?php echo htmlspecialchars($title ?? "IMGD - Igreja Ministério da Graça de Deus | Matola, Moçambique"); ?>
+    </title>
     <meta name="description"
-        content="<?php echo htmlspecialchars($description ?? 'Igreja Ministério da Graça de Deus - Uma comunidade de fé, esperança e amor em Cristo Jesus.'); ?>">
-    <meta name="author" content="IMGD - Igreja Ministério da Graça de Deus">
-    <meta name="robots" content="index, follow">
+        content="<?php echo htmlspecialchars($description ?? 'Igreja Ministério da Graça de Deus em Matola. Comunidade cristã, pregações, mensagens, eventos e ação social. Junte-se a nós!'); ?>">
+    <meta name="keywords"
+        content="igreja, Matola, Moçambique, cristão, pregação, Apóstolo Jeque, IMGD, Ministério da Graça de Deus">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?php echo "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; ?>">
+    <meta property="og:title"
+        content="<?php echo htmlspecialchars($title ?? "IMGD - Igreja Ministério da Graça de Deus"); ?>">
+    <meta property="og:description"
+        content="<?php echo htmlspecialchars($description ?? 'Igreja Ministério da Graça de Deus em Matola'); ?>">
+    <meta property="og:image" content="/assets/img/logo.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title"
+        content="<?php echo htmlspecialchars($title ?? "IMGD - Igreja Ministério da Graça de Deus"); ?>">
+    <meta name="twitter:description"
+        content="<?php echo htmlspecialchars($description ?? 'Igreja Ministério da Graça de Deus em Matola'); ?>">
+    <meta name="twitter:image" content="/assets/img/logo.png">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="<?php echo "https://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; ?>">
+
+    <!-- Schema.org markup -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "PlaceOfWorship",
+        "name": "Igreja Ministério da Graça de Deus",
+        "description": "Igreja cristã em Matola, Moçambique",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Av. Joaquim Chissano, nº 58",
+            "addressLocality": "Matola",
+            "addressRegion": "Maputo",
+            "addressCountry": "MZ"
+        },
+        "telephone": "+258 XX XXX XXXX",
+        "url": "https://www.imgd.org.mz",
+        "sameAs": [
+            "https://web.facebook.com/www.imgdjeque.org.mz",
+            "https://youtube.com/@imgdvideos",
+            "https://www.instagram.com/apostolojeque"
+        ]
+    }
+    </script>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/assets/img/logo.png">
 
-    <!-- Font Awesome -->
+    <!-- Preload critical resources -->
+    <link rel="preload" href="/assets/img/logo.png" as="image">
+
+    <!-- CSS Otimizado -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
         crossorigin="anonymous">
-
-    <!-- Swiper -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" crossorigin="anonymous">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            500: '#f59e0b',
-                            600: '#d97706',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 
 <body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
