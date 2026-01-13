@@ -14,6 +14,8 @@
         content="<?php echo htmlspecialchars($description ?? 'Igreja Ministério da Graça de Deus em Matola. Comunidade cristã, pregações, mensagens, eventos e ação social. Junte-se a nós!'); ?>">
     <meta name="keywords"
         content="igreja, Matola, Moçambique, cristão, pregação, Apóstolo Jeque, IMGD, Ministério da Graça de Deus">
+    
+    <meta name="google-site-verification" content="CgPpUhREoU4hbKrEnEmsO4coQxVutuBQzLYmmPIKvx4" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
